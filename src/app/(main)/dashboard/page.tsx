@@ -18,55 +18,40 @@ import {
   MapPin,
   CheckCircle2,
   Settings,
+  ShoppingBag,
+  Sparkles,
+  Search,
 } from "lucide-react";
 import { formatRupiah, ORDER_STATUS_LABELS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 
-// Mock user active orders
-const MOCK_BUYER_ORDERS = [
-  {
-    id: "ord-101",
-    item_name: "Parfum Surrati Royal Musk 100ml",
-    traveler_name: "Ustadz H. Ahmad Fauzi, Lc.",
-    traveler_avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-    origin: "Madinah",
-    destination: "Jakarta",
-    status: "purchased",
-    item_price: 637500,
-    jastip_fee: 75000,
-    escrow_amount: 737412,
-    eta: "12 Okt 2026",
-  },
-  {
-    id: "ord-102",
-    item_name: "Turkish Delight Hafiz Mustafa 1kg Mix Pistachio",
-    traveler_name: "Siti Rahmania Putri",
-    traveler_avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-    origin: "Istanbul",
-    destination: "Surabaya",
-    status: "escrow_funded",
-    item_price: 280000,
-    jastip_fee: 100000,
-    escrow_amount: 393300,
-    eta: "22 Okt 2026",
-  },
-];
+interface BuyerOrder {
+  id: string;
+  item_name: string;
+  traveler_name: string;
+  traveler_avatar?: string;
+  origin: string;
+  destination: string;
+  status: string;
+  item_price: number;
+  jastip_fee: number;
+  escrow_amount: number;
+  eta: string;
+}
 
-const MOCK_TRAVELER_TRIPS = [
-  {
-    id: "trip-201",
-    destination: "Makkah & Madinah Al-Mukarramah",
-    origin: "Jakarta (CGK)",
-    departureDate: "10 Okt 2026",
-    returnDate: "24 Okt 2026",
-    totalLuggageKg: 20,
-    usedLuggageKg: 11.5,
-    remainingKg: 8.5,
-    status: "scheduled",
-    acceptedOrdersCount: 6,
-    totalPotentialEarnings: 650000,
-  },
-];
+interface TravelerTrip {
+  id: string;
+  destination: string;
+  origin: string;
+  departureDate: string;
+  returnDate: string;
+  totalLuggageKg: number;
+  usedLuggageKg: number;
+  remainingKg: number;
+  status: string;
+  acceptedOrdersCount: number;
+  totalPotentialEarnings: number;
+}
 
 export default function DashboardPage() {
   const supabase = createClient();
@@ -74,52 +59,103 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState("Pengguna Safara");
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [kycStatus, setKycStatus] = useState("unverified");
+  const [buyerOrders, setBuyerOrders] = useState<BuyerOrder[]>([]);
+  const [travelerTrips, setTravelerTrips] = useState<TravelerTrip[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    async function loadUserData() {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-      if (user) {
-        const { data: profile } = await (supabase.from("profiles") as unknown as {
-          select: (columns: string) => {
-            eq: (col: string, val: string) => {
-              single: () => Promise<{
-                data: { full_name?: string; avatar_url?: string | null; kyc_status?: string } | null;
-              }>;
+        if (user) {
+          const { data: profile } = await (supabase.from("profiles") as unknown as {
+            select: (columns: string) => {
+              eq: (col: string, val: string) => {
+                single: () => Promise<{
+                  data: { full_name?: string; avatar_url?: string | null; kyc_status?: string } | null;
+                }>;
+              };
             };
-          };
-        })
-          .select("full_name, avatar_url, kyc_status")
-          .eq("id", user.id)
-          .single();
+          })
+            .select("full_name, avatar_url, kyc_status")
+            .eq("id", user.id)
+            .single();
 
-        if (profile) {
-          setUserName(
-            profile.full_name || user.email?.split("@")[0] || "Pengguna Safara"
-          );
-          setUserAvatar(profile.avatar_url || null);
-          setKycStatus(profile.kyc_status || "unverified");
-        } else {
-          setUserName(
-            user.user_metadata?.full_name ||
-              user.user_metadata?.name ||
-              user.email?.split("@")[0] ||
-              "Pengguna Safara"
-          );
-          setUserAvatar(
-            user.user_metadata?.avatar_url ||
-              user.user_metadata?.picture ||
-              null
-          );
+          if (profile) {
+            setUserName(
+              profile.full_name || user.email?.split("@")[0] || "Pengguna Safara"
+            );
+            setUserAvatar(profile.avatar_url || null);
+            setKycStatus(profile.kyc_status || "unverified");
+          } else {
+            setUserName(
+              user.user_metadata?.full_name ||
+                user.user_metadata?.name ||
+                user.email?.split("@")[0] ||
+                "Pengguna Safara"
+            );
+            setUserAvatar(
+              user.user_metadata?.avatar_url ||
+                user.user_metadata?.picture ||
+                null
+            );
+          }
+
+          // Fetch real buyer orders for this user
+          try {
+            const { data: ordersData } = await (supabase.from("orders") as unknown as {
+              select: (cols: string) => {
+                eq: (col: string, val: string) => Promise<{ data: BuyerOrder[] | null }>;
+              };
+            })
+              .select("*")
+              .eq("buyer_id", user.id);
+
+            if (ordersData && ordersData.length > 0) {
+              setBuyerOrders(ordersData);
+            } else {
+              setBuyerOrders([]);
+            }
+          } catch {
+            setBuyerOrders([]);
+          }
+
+          // Fetch real trips created by this user
+          try {
+            const { data: tripsData } = await (supabase.from("trips") as unknown as {
+              select: (cols: string) => {
+                eq: (col: string, val: string) => Promise<{ data: TravelerTrip[] | null }>;
+              };
+            })
+              .select("*")
+              .eq("traveler_id", user.id);
+
+            if (tripsData && tripsData.length > 0) {
+              setTravelerTrips(tripsData);
+            } else {
+              setTravelerTrips([]);
+            }
+          } catch {
+            setTravelerTrips([]);
+          }
         }
+      } catch (err) {
+        console.error("Error loading dashboard data:", err);
+      } finally {
+        setLoading(false);
       }
     }
-    loadUser();
+
+    loadUserData();
   }, [supabase]);
 
   const initial = userName.charAt(0).toUpperCase();
+  const totalEscrow = buyerOrders.reduce((acc, curr) => acc + (curr.escrow_amount || 0), 0);
+  const activeOrdersCount = buyerOrders.filter((o) => o.status !== "completed" && o.status !== "cancelled").length;
+  const activeTripsCount = travelerTrips.filter((t) => t.status === "scheduled" || t.status === "active").length;
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
@@ -164,7 +200,7 @@ export default function DashboardPage() {
                     </Badge>
                   </div>
                   <p className="text-xs text-sage mt-0.5">
-                    Member Safara Aktif • Skor Kepercayaan: 5.0 / 5.0
+                    Member Safara Aktif • Proteksi Rekening Bersama (Escrow)
                   </p>
                 </div>
               </div>
@@ -196,16 +232,20 @@ export default function DashboardPage() {
               <div className="p-3 rounded-lg bg-canvas">
                 <div className="text-xs text-sage">Dana Escrow Terlindungi</div>
                 <div className="text-lg font-bold text-olive mt-0.5">
-                  {formatRupiah(1130712)}
+                  {formatRupiah(totalEscrow)}
                 </div>
               </div>
               <div className="p-3 rounded-lg bg-canvas">
-                <div className="text-xs text-sage">Pesanan Aktif</div>
-                <div className="text-lg font-bold text-charcoal mt-0.5">2 Titipan</div>
+                <div className="text-xs text-sage">Pesanan Titipan Aktif</div>
+                <div className="text-lg font-bold text-charcoal mt-0.5">
+                  {activeOrdersCount} Titipan
+                </div>
               </div>
               <div className="p-3 rounded-lg bg-canvas">
                 <div className="text-xs text-sage">Trip Aktif Anda</div>
-                <div className="text-lg font-bold text-charcoal mt-0.5">1 Perjalanan</div>
+                <div className="text-lg font-bold text-charcoal mt-0.5">
+                  {activeTripsCount} Perjalanan
+                </div>
               </div>
               <div className="p-3 rounded-lg bg-canvas">
                 <div className="text-xs text-sage">Status Garansi</div>
@@ -229,7 +269,7 @@ export default function DashboardPage() {
               <Package className="h-4 w-4" />
               Titipan Saya (Sebagai Buyer)
               <Badge className="bg-olive/10 text-olive ml-1 text-xs">
-                {MOCK_BUYER_ORDERS.length}
+                {buyerOrders.length}
               </Badge>
             </button>
             <button
@@ -241,9 +281,9 @@ export default function DashboardPage() {
               }`}
             >
               <Plane className="h-4 w-4" />
-              Trip & Bagasi Saya (Sebagai Traveler)
+              Trip &amp; Bagasi Saya (Sebagai Traveler)
               <Badge className="bg-gold/20 text-gold-muted ml-1 text-xs">
-                {MOCK_TRAVELER_TRIPS.length}
+                {travelerTrips.length}
               </Badge>
             </button>
           </div>
@@ -251,135 +291,190 @@ export default function DashboardPage() {
           {/* Tab Content: Buyer Orders */}
           {activeTab === "buyer" && (
             <div className="space-y-4">
-              {MOCK_BUYER_ORDERS.map((order) => {
-                const statusInfo = ORDER_STATUS_LABELS[order.status] || {
-                  label: order.status,
-                  color: "bg-slate-100 text-slate-700",
-                };
+              {buyerOrders.length === 0 ? (
+                /* Clean Empty State */
+                <Card className="border-warm-border bg-white p-12 text-center shadow-xs">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-olive/10 text-olive mb-4">
+                    <ShoppingBag className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-charcoal">
+                    Belum Ada Titipan Aktif
+                  </h3>
+                  <p className="mx-auto mt-1 max-w-md text-xs sm:text-sm text-sage">
+                    Anda belum memiliki transaksi titipan yang sedang berjalan. Temukan barang impian Anda dari Makkah, Madinah, atau Turki dan titip dengan aman lewat traveler terverifikasi.
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    <Link href="/listings">
+                      <Button className="bg-olive hover:bg-olive-light text-white text-xs sm:text-sm">
+                        <Search className="h-4 w-4 mr-1.5" />
+                        Jelajahi Listing Titipan
+                      </Button>
+                    </Link>
+                    <Link href="/listings/new">
+                      <Button variant="outline" className="border-warm-border text-charcoal hover:bg-sand text-xs sm:text-sm">
+                        <Plus className="h-4 w-4 mr-1.5" />
+                        Buat Request Titipan
+                      </Button>
+                    </Link>
+                  </div>
+                </Card>
+              ) : (
+                buyerOrders.map((order) => {
+                  const statusInfo = ORDER_STATUS_LABELS[order.status] || {
+                    label: order.status,
+                    color: "bg-slate-100 text-slate-700",
+                  };
 
-                return (
-                  <Card key={order.id} className="border-warm-border bg-white p-5 shadow-sm">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      {/* Left: Product & Traveler */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-mono text-sage">{order.id}</span>
-                          <span className="text-sage">•</span>
-                          <Badge className={`${statusInfo.color} text-xs`}>
-                            {statusInfo.label}
-                          </Badge>
-                          <span className="text-xs text-sage">Estimasi Tiba: {order.eta}</span>
+                  return (
+                    <Card key={order.id} className="border-warm-border bg-white p-5 shadow-sm">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        {/* Left: Product & Traveler */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-sage">{order.id}</span>
+                            <span className="text-sage">•</span>
+                            <Badge className={`${statusInfo.color} text-xs`}>
+                              {statusInfo.label}
+                            </Badge>
+                            {order.eta && (
+                              <span className="text-xs text-sage">Estimasi Tiba: {order.eta}</span>
+                            )}
+                          </div>
+
+                          <h3 className="text-base font-bold text-charcoal">
+                            {order.item_name}
+                          </h3>
+
+                          <div className="flex items-center gap-2 text-xs text-sage">
+                            <span>Traveler:</span>
+                            {order.traveler_avatar ? (
+                              <Image
+                                src={order.traveler_avatar}
+                                alt={order.traveler_name}
+                                width={20}
+                                height={20}
+                                className="h-5 w-5 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-5 w-5 rounded-full bg-olive/10 flex items-center justify-center text-[10px] font-bold text-olive">
+                                {order.traveler_name.charAt(0)}
+                              </div>
+                            )}
+                            <span className="font-medium text-charcoal">{order.traveler_name}</span>
+                            <span>•</span>
+                            <MapPin className="h-3 w-3" />
+                            <span>{order.origin} → {order.destination}</span>
+                          </div>
                         </div>
 
-                        <h3 className="text-base font-bold text-charcoal">
-                          {order.item_name}
-                        </h3>
+                        {/* Right: Escrow summary & Actions */}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:text-right border-t lg:border-t-0 pt-4 lg:pt-0 border-warm-border">
+                          <div>
+                            <div className="text-[11px] text-sage">Dana Aman di Escrow</div>
+                            <div className="text-base font-extrabold text-olive">
+                              {formatRupiah(order.escrow_amount)}
+                            </div>
+                            <div className="text-[10px] text-emerald-700 font-medium">
+                              Barang: {formatRupiah(order.item_price)} + Fee: {formatRupiah(order.jastip_fee)}
+                            </div>
+                          </div>
 
-                        <div className="flex items-center gap-2 text-xs text-sage">
-                          <span>Traveler:</span>
-                          <Image
-                            src={order.traveler_avatar}
-                            alt={order.traveler_name}
-                            width={20}
-                            height={20}
-                            className="h-5 w-5 rounded-full object-cover"
-                          />
-                          <span className="font-medium text-charcoal">{order.traveler_name}</span>
-                          <span>•</span>
-                          <MapPin className="h-3 w-3" />
-                          <span>{order.origin} → {order.destination}</span>
+                          <div className="flex gap-2">
+                            <Link href="/chat">
+                              <Button size="sm" variant="outline" className="border-warm-border hover:bg-sand text-xs">
+                                <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                                Chat
+                              </Button>
+                            </Link>
+                          </div>
                         </div>
                       </div>
-
-                      {/* Right: Escrow summary & Actions */}
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:text-right border-t lg:border-t-0 pt-4 lg:pt-0 border-warm-border">
-                        <div>
-                          <div className="text-[11px] text-sage">Dana Aman di Escrow</div>
-                          <div className="text-base font-extrabold text-olive">
-                            {formatRupiah(order.escrow_amount)}
-                          </div>
-                          <div className="text-[10px] text-emerald-700 font-medium">
-                            Barang: {formatRupiah(order.item_price)} + Fee: {formatRupiah(order.jastip_fee)}
-                          </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                          <Link href="/chat">
-                            <Button size="sm" variant="outline" className="border-warm-border hover:bg-sand text-xs">
-                              <MessageCircle className="h-3.5 w-3.5 mr-1" />
-                              Chat
-                            </Button>
-                          </Link>
-                          {order.status === "purchased" && (
-                            <Button size="sm" className="bg-olive hover:bg-olive-light text-white text-xs">
-                              Cek Foto Toko
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
+                    </Card>
+                  );
+                })
+              )}
             </div>
           )}
 
           {/* Tab Content: Traveler Trips */}
           {activeTab === "traveler" && (
             <div className="space-y-4">
-              {MOCK_TRAVELER_TRIPS.map((trip) => (
-                <Card key={trip.id} className="border-warm-border bg-white p-5 shadow-sm">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-blue-100 text-blue-800 text-xs">
-                          {trip.status === "scheduled" ? "Trip Terjadwal" : trip.status}
-                        </Badge>
-                        <span className="text-xs text-sage">
-                          {trip.departureDate} - {trip.returnDate}
-                        </span>
-                      </div>
-
-                      <h3 className="text-base font-bold text-charcoal">
-                        {trip.origin} ➔ {trip.destination}
-                      </h3>
-
-                      {/* Baggage progress bar */}
-                      <div className="space-y-1 max-w-xs">
-                        <div className="flex justify-between text-xs text-sage">
-                          <span>Bagasi Terisi ({trip.usedLuggageKg} kg)</span>
-                          <span className="font-semibold text-olive">Sisa {trip.remainingKg} kg</span>
-                        </div>
-                        <div className="w-full bg-sand h-2 rounded-full overflow-hidden">
-                          <div
-                            className="bg-olive h-full rounded-full"
-                            style={{ width: `${(trip.usedLuggageKg / trip.totalLuggageKg) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:text-right border-t lg:border-t-0 pt-4 lg:pt-0 border-warm-border">
-                      <div>
-                        <div className="text-[11px] text-sage">Potensi Komisi Jastip</div>
-                        <div className="text-base font-extrabold text-gold-muted">
-                          {formatRupiah(trip.totalPotentialEarnings)}
-                        </div>
-                        <div className="text-[10px] text-sage">
-                          Dari {trip.acceptedOrdersCount} pesanan titipan
-                        </div>
-                      </div>
-
-                      <Link href={`/trips/${trip.id}`}>
-                        <Button size="sm" className="bg-olive hover:bg-olive-light text-white text-xs">
-                          Kelola Pesanan Trip
-                          <ArrowRight className="h-3.5 w-3.5 ml-1" />
-                        </Button>
-                      </Link>
-                    </div>
+              {travelerTrips.length === 0 ? (
+                /* Clean Empty State */
+                <Card className="border-warm-border bg-white p-12 text-center shadow-xs">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-olive/10 text-olive mb-4">
+                    <Plane className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-charcoal">
+                    Belum Ada Rencana Perjalanan
+                  </h3>
+                  <p className="mx-auto mt-1 max-w-md text-xs sm:text-sm text-sage">
+                    Bagi Anda yang akan bepergian atau menjalankan ibadah Umrah, buka ruang bagasi kosong Anda untuk menerima titipan barang dan raih penghasilan jastip yang berkah.
+                  </p>
+                  <div className="mt-6 flex justify-center">
+                    <Link href="/trips/new">
+                      <Button className="bg-olive hover:bg-olive-light text-white text-xs sm:text-sm">
+                        <Plane className="h-4 w-4 mr-1.5" />
+                        Buka Trip Jastip Baru
+                      </Button>
+                    </Link>
                   </div>
                 </Card>
-              ))}
+              ) : (
+                travelerTrips.map((trip) => (
+                  <Card key={trip.id} className="border-warm-border bg-white p-5 shadow-sm">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-blue-100 text-blue-800 text-xs">
+                            {trip.status === "scheduled" ? "Trip Terjadwal" : trip.status}
+                          </Badge>
+                          <span className="text-xs text-sage">
+                            {trip.departureDate} - {trip.returnDate}
+                          </span>
+                        </div>
+
+                        <h3 className="text-base font-bold text-charcoal">
+                          {trip.origin} ➔ {trip.destination}
+                        </h3>
+
+                        {/* Baggage progress bar */}
+                        <div className="space-y-1 max-w-xs">
+                          <div className="flex justify-between text-xs text-sage">
+                            <span>Bagasi Terisi ({trip.usedLuggageKg} kg)</span>
+                            <span className="font-semibold text-olive">Sisa {trip.remainingKg} kg</span>
+                          </div>
+                          <div className="w-full bg-sand h-2 rounded-full overflow-hidden">
+                            <div
+                              className="bg-olive h-full rounded-full"
+                              style={{ width: `${(trip.usedLuggageKg / (trip.totalLuggageKg || 1)) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4 lg:text-right border-t lg:border-t-0 pt-4 lg:pt-0 border-warm-border">
+                        <div>
+                          <div className="text-[11px] text-sage">Potensi Komisi Jastip</div>
+                          <div className="text-base font-extrabold text-gold-muted">
+                            {formatRupiah(trip.totalPotentialEarnings || 0)}
+                          </div>
+                          <div className="text-[10px] text-sage">
+                            Dari {trip.acceptedOrdersCount || 0} pesanan titipan
+                          </div>
+                        </div>
+
+                        <Link href={`/trips/${trip.id}`}>
+                          <Button size="sm" className="bg-olive hover:bg-olive-light text-white text-xs">
+                            Kelola Pesanan Trip
+                            <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           )}
         </div>

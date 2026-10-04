@@ -233,7 +233,7 @@ export default function ListingDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                   </div>
 
-                  <Link href="/chat">
+                  <Link href={`/chat?to=${encodeURIComponent(listing.creator_name)}&item=${encodeURIComponent(listing.title)}`}>
                     <Button variant="outline" size="sm" className="border-warm-border text-charcoal hover:bg-sand">
                       <MessageCircle className="h-4 w-4 mr-1.5" />
                       Chat

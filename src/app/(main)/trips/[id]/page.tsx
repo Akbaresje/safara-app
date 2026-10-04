@@ -78,10 +78,10 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               </div>
 
-              <Link href="/chat">
+              <Link href={`/chat?to=${encodeURIComponent(traveler.name)}&item=${encodeURIComponent("Bagasi Trip " + traveler.destinationName)}`}>
                 <Button className="bg-olive hover:bg-olive-light text-white font-semibold py-5">
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  Chat & Ajukan Titipan
+                  Chat &amp; Ajukan Titipan
                 </Button>
               </Link>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -21,125 +21,74 @@ import {
   DollarSign,
   ArrowUpRight,
   RotateCcw,
+  Lock,
+  LogOut,
+  Package,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import { formatRupiah } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 
-// ── Mock Initial Admin Data ──────────────────────────────────────────────────
+interface EscrowOrder {
+  id: string;
+  itemName: string;
+  buyerName: string;
+  buyerEmail: string;
+  travelerName: string;
+  amount: number;
+  itemPrice: number;
+  jastipFee: number;
+  platformFee: number;
+  status: string;
+  date: string;
+  receiptPhoto?: string | null;
+}
 
-const INITIAL_ESCROW_ORDERS = [
-  {
-    id: "ord-88120",
-    itemName: "Parfum Surrati Royal Musk 100ml",
-    buyerName: "Muhammad Rizky",
-    buyerEmail: "rizky@gmail.com",
-    travelerName: "Ustadz H. Ahmad Fauzi, Lc.",
-    amount: 737412,
-    itemPrice: 637500,
-    jastipFee: 75000,
-    platformFee: 24912,
-    status: "escrow_funded",
-    date: "04 Okt 2026",
-    receiptPhoto: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    id: "ord-88121",
-    itemName: "Turkish Delight Hafiz Mustafa 1kg Mix Pistachio",
-    buyerName: "Siti Rahmania",
-    buyerEmail: "siti.rahma@yahoo.com",
-    travelerName: "Nabila Saraswati",
-    amount: 393300,
-    itemPrice: 280000,
-    jastipFee: 100000,
-    platformFee: 13300,
-    status: "delivered", // Siap dicairkan
-    date: "02 Okt 2026",
-    receiptPhoto: "https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&w=400&q=80",
-  },
-  {
-    id: "ord-88118",
-    itemName: "Sajadah Tebal Rawdah Madinah Emboss Emas",
-    buyerName: "Hendro Wibowo",
-    buyerEmail: "hendro.w@gmail.com",
-    travelerName: "Zulkifli Arifin",
-    amount: 492000,
-    itemPrice: 400000,
-    jastipFee: 75000,
-    platformFee: 17000,
-    status: "disputed", // Sengketa
-    date: "29 Sept 2026",
-    receiptPhoto: null,
-  },
-];
+interface KycApplication {
+  id: string;
+  userId: string;
+  name: string;
+  role: string;
+  ktpNumber: string;
+  passportNumber: string;
+  destination: string;
+  departureDate: string;
+  submittedAt: string;
+  status: "pending" | "approved" | "rejected";
+}
 
-const INITIAL_KYC_APPLICATIONS = [
-  {
-    id: "kyc-01",
-    userId: "usr-201",
-    name: "Ustadz H. Ahmad Fauzi, Lc.",
-    role: "Tour Leader Umrah",
-    ktpNumber: "3273192003840002",
-    passportNumber: "C8192831",
-    destination: "Makkah & Madinah Al-Mukarramah",
-    departureDate: "12 Okt 2026",
-    submittedAt: "03 Okt 2026",
-    status: "pending",
-  },
-  {
-    id: "kyc-02",
-    userId: "usr-202",
-    name: "Fajar Setiawan",
-    role: "Backpacker Turki",
-    ktpNumber: "3171092810920004",
-    passportNumber: "B9201928",
-    destination: "Istanbul & Grand Bazaar",
-    departureDate: "15 Okt 2026",
-    submittedAt: "04 Okt 2026",
-    status: "pending",
-  },
-];
-
-const INITIAL_USERS = [
-  {
-    id: "usr-01",
-    name: "Ahmad Disk",
-    email: "adisk@gmail.com",
-    role: "admin",
-    kycStatus: "verified",
-    joinedDate: "Sept 2026",
-  },
-  {
-    id: "usr-02",
-    name: "Ustadz H. Ahmad Fauzi, Lc.",
-    email: "ahmad.fauzi@gmail.com",
-    role: "user",
-    kycStatus: "verified",
-    joinedDate: "Agust 2026",
-  },
-  {
-    id: "usr-03",
-    name: "Nabila Saraswati",
-    email: "nabila.s@gmail.com",
-    role: "user",
-    kycStatus: "verified",
-    joinedDate: "Sept 2026",
-  },
-  {
-    id: "usr-04",
-    name: "Muhammad Rizky",
-    email: "rizky@gmail.com",
-    role: "user",
-    kycStatus: "unverified",
-    joinedDate: "Okt 2026",
-  },
-];
+interface UserProfile {
+  id: string;
+  full_name: string;
+  email: string;
+  system_role: string;
+  kyc_status: string;
+  created_at?: string;
+}
 
 export default function AdminDashboardPage() {
+  const supabase = createClient();
+
+  // Authentication State
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
+
+  // Login Form State
+  const [loginEmail, setLoginEmail] = useState("adminsafara@gmail.com");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Admin Dashboard State
   const [activeTab, setActiveTab] = useState<"escrow" | "kyc" | "users" | "settings">("escrow");
-  const [orders, setOrders] = useState(INITIAL_ESCROW_ORDERS);
-  const [kycList, setKycList] = useState(INITIAL_KYC_APPLICATIONS);
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [orders, setOrders] = useState<EscrowOrder[]>([]);
+  const [kycList, setKycList] = useState<KycApplication[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState<string | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
 
   // Platform setting states
   const [platformFeePercent, setPlatformFeePercent] = useState("3.5");
@@ -151,7 +100,174 @@ export default function AdminDashboardPage() {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  // Check whether current user is authorized as Admin
+  useEffect(() => {
+    async function verifyAdminAuth() {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        const sessionAdmin =
+          typeof window !== "undefined" &&
+          sessionStorage.getItem("safara_admin_session") === "adminsafara@gmail.com";
+
+        if (user) {
+          setCurrentEmail(user.email ?? null);
+          if (user.email === "adminsafara@gmail.com" || sessionAdmin) {
+            setIsAdmin(true);
+            loadAdminData();
+          } else {
+            setIsAdmin(false);
+          }
+        } else if (sessionAdmin) {
+          setIsAdmin(true);
+          loadAdminData();
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (err) {
+        console.error("Auth verification error:", err);
+        setIsAdmin(false);
+      } finally {
+        setCheckingAuth(false);
+      }
+    }
+
+    verifyAdminAuth();
+  }, [supabase]);
+
+  // Load real data from Supabase
+  const loadAdminData = async () => {
+    setLoadingData(true);
+    try {
+      // 1. Fetch real registered users
+      const { data: profilesData } = await (supabase.from("profiles") as unknown as {
+        select: (cols: string) => Promise<{ data: UserProfile[] | null }>;
+      }).select("id, full_name, email, system_role, kyc_status, created_at");
+
+      if (profilesData && profilesData.length > 0) {
+        setUsers(profilesData);
+      } else {
+        // Fallback default admin record
+        setUsers([
+          {
+            id: "adm-01",
+            full_name: "Admin Safara",
+            email: "adminsafara@gmail.com",
+            system_role: "admin",
+            kyc_status: "verified",
+            created_at: new Date().toISOString(),
+          },
+        ]);
+      }
+
+      // 2. Fetch real orders
+      const { data: ordersData } = await (supabase.from("orders") as unknown as {
+        select: (cols: string) => Promise<{ data: EscrowOrder[] | null }>;
+      }).select("*");
+
+      if (ordersData && ordersData.length > 0) {
+        setOrders(ordersData);
+      } else {
+        setOrders([]);
+      }
+
+      // 3. Fetch real KYC applications if available
+      try {
+        const { data: kycData } = await (supabase.from("kyc_applications") as unknown as {
+          select: (cols: string) => Promise<{ data: KycApplication[] | null }>;
+        }).select("*");
+        if (kycData && kycData.length > 0) {
+          setKycList(kycData);
+        } else {
+          setKycList([]);
+        }
+      } catch {
+        setKycList([]);
+      }
+    } catch (err) {
+      console.error("Error loading admin data:", err);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  // Handle Admin Portal Login
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError(null);
+    setIsLoggingIn(true);
+
+    const email = loginEmail.trim().toLowerCase();
+    const password = loginPassword.trim();
+
+    // Verify credentials specifically requested: adminsafara@gmail.com / Nangka5no2
+    if (email !== "adminsafara@gmail.com" || password !== "Nangka5no2") {
+      setLoginError("Email atau password administrator salah. Akses ditolak.");
+      setIsLoggingIn(false);
+      return;
+    }
+
+    try {
+      // Sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        // If account doesn't exist yet in Supabase auth, auto sign it up
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: "Admin Safara",
+              system_role: "admin",
+            },
+          },
+        });
+
+        if (signUpError && !signUpError.message.includes("already registered")) {
+          console.warn("Supabase auth notice:", signUpError.message);
+        }
+      }
+
+      // Set admin session
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("safara_admin_session", "adminsafara@gmail.com");
+      }
+
+      setIsAdmin(true);
+      setCurrentEmail("adminsafara@gmail.com");
+      showNotification("Selamat datang di Safara Admin Dashboard!");
+      loadAdminData();
+    } catch (err) {
+      console.error("Login admin error:", err);
+      // Fallback: If credentials match adminsafara@gmail.com / Nangka5no2, permit admin session
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("safara_admin_session", "adminsafara@gmail.com");
+      }
+      setIsAdmin(true);
+      showNotification("Selamat datang di Safara Admin Dashboard!");
+      loadAdminData();
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleAdminLogout = async () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("safara_admin_session");
+    }
+    await supabase.auth.signOut();
+    setIsAdmin(false);
+    setCurrentEmail(null);
+    setLoginPassword("");
+  };
+
+  // Escrow moderation actions
   const handleReleaseEscrow = (orderId: string) => {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: "completed" } : o))
@@ -184,9 +300,9 @@ export default function AdminDashboardPage() {
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === userId) {
-          const newRole = u.role === "admin" ? "user" : "admin";
-          showNotification(`Role user ${u.name} diubah menjadi: ${newRole.toUpperCase()}`);
-          return { ...u, role: newRole };
+          const newRole = u.system_role === "admin" ? "user" : "admin";
+          showNotification(`Role user ${u.full_name || u.email} diubah menjadi: ${newRole.toUpperCase()}`);
+          return { ...u, system_role: newRole };
         }
         return u;
       })
@@ -197,6 +313,135 @@ export default function AdminDashboardPage() {
     e.preventDefault();
     showNotification("Pengaturan komisi platform & kurs realtime berhasil disimpan.");
   };
+
+  // ── RENDER LOADING STATE ───────────────────────────────────────────────────
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-screen flex-col bg-canvas">
+        <Navbar />
+        <div className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-olive mx-auto mb-2" />
+            <p className="text-xs text-sage">Memeriksa hak akses administrator...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── RENDER DEDICATED ADMIN LOGIN GATE IF NOT ADMIN ─────────────────────────
+  if (!isAdmin) {
+    return (
+      <div className="flex min-h-screen flex-col bg-canvas">
+        <Navbar />
+
+        <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+          <Card className="w-full max-w-md border-warm-border bg-white p-8 shadow-xl rounded-2xl space-y-6">
+            <div className="text-center space-y-2">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-olive/10 text-olive">
+                <Lock className="h-7 w-7" />
+              </div>
+              <h1 className="text-2xl font-extrabold text-charcoal">
+                Portal Admin Safara
+              </h1>
+              <p className="text-xs text-sage">
+                Akses terbatas khusus tim Safara. Masukkan kredensial administrator resmi untuk mengelola platform.
+              </p>
+            </div>
+
+            {/* Current user non-admin alert */}
+            {currentEmail && currentEmail !== "adminsafara@gmail.com" && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
+                <AlertTriangle className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold">Akun saat ini bukan Admin</p>
+                  <p className="text-[11px] text-amber-800">
+                    Anda sedang masuk sebagai <strong>{currentEmail}</strong>. Dashboard admin hanya dapat diakses dengan akun <strong>adminsafara@gmail.com</strong>.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {loginError && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 font-medium animate-in fade-in-0 flex items-center gap-2">
+                <XCircle className="h-4 w-4 text-red-600 shrink-0" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
+            {/* Admin Login Form */}
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-charcoal block mb-1.5">
+                  Email Administrator
+                </label>
+                <Input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  placeholder="adminsafara@gmail.com"
+                  required
+                  className="h-10 text-sm border-warm-border"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-charcoal block">
+                    Password Administrator
+                  </label>
+                </div>
+                <Input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="h-10 text-sm border-warm-border"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full bg-olive hover:bg-olive-light text-white font-semibold h-11 text-sm shadow-sm"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Memverifikasi...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="h-4 w-4 mr-2" />
+                    Masuk ke Dashboard Admin
+                  </>
+                )}
+              </Button>
+            </form>
+
+            <div className="pt-2 border-t border-warm-border text-center">
+              <Link
+                href="/dashboard"
+                className="text-xs text-sage hover:text-charcoal transition-colors font-medium"
+              >
+                ← Kembali ke Dashboard Pengguna
+              </Link>
+            </div>
+          </Card>
+        </main>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // ── RENDER FULL ADMIN DASHBOARD IF AUTHENTICATED ───────────────────────────
+  const activeOrdersCount = orders.filter((o) => o.status !== "completed" && o.status !== "refunded").length;
+  const totalEscrowAmount = orders.reduce((acc, o) => acc + (o.amount || 0), 0);
+  const platformFeeCollected = orders.reduce((acc, o) => acc + (o.platformFee || 0), 0);
+  const pendingKycCount = kycList.filter((k) => k.status === "pending").length;
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
@@ -227,6 +472,15 @@ export default function AdminDashboardPage() {
                   Dashboard Pengguna
                 </Button>
               </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAdminLogout}
+                className="border-red-200 text-red-600 hover:bg-red-50 text-xs"
+              >
+                <LogOut className="h-3.5 w-3.5 mr-1" />
+                Keluar Admin
+              </Button>
             </div>
           </div>
 
@@ -255,11 +509,11 @@ export default function AdminDashboardPage() {
                 <DollarSign className="h-4 w-4 text-olive" />
               </div>
               <div className="text-xl sm:text-2xl font-extrabold text-charcoal">
-                {formatRupiah(1622712)}
+                {formatRupiah(totalEscrowAmount)}
               </div>
               <div className="text-[10px] text-emerald-700 font-medium flex items-center gap-1">
                 <ArrowUpRight className="h-3 w-3" />
-                3 Transaksi Berjalan
+                {activeOrdersCount} Transaksi Berjalan
               </div>
             </Card>
 
@@ -269,7 +523,7 @@ export default function AdminDashboardPage() {
                 <ShieldCheck className="h-4 w-4 text-emerald-600" />
               </div>
               <div className="text-xl sm:text-2xl font-extrabold text-olive">
-                {formatRupiah(55212)}
+                {formatRupiah(platformFeeCollected)}
               </div>
               <div className="text-[10px] text-sage">3.5% komisi escrow aman</div>
             </Card>
@@ -280,7 +534,7 @@ export default function AdminDashboardPage() {
                 <Users className="h-4 w-4 text-amber-600" />
               </div>
               <div className="text-xl sm:text-2xl font-extrabold text-amber-800">
-                {kycList.filter((k) => k.status === "pending").length} Traveler
+                {pendingKycCount} Traveler
               </div>
               <div className="text-[10px] text-amber-700 font-medium">Perlu review KTP &amp; Paspor</div>
             </Card>
@@ -301,7 +555,7 @@ export default function AdminDashboardPage() {
           <div className="flex gap-2 border-b border-warm-border pb-3 overflow-x-auto">
             {[
               { id: "escrow", label: "Moderasi Escrow & Transaksi", icon: DollarSign },
-              { id: "kyc", label: "Verifikasi KYC Traveler", icon: ShieldCheck, badge: kycList.filter((k) => k.status === "pending").length },
+              { id: "kyc", label: "Verifikasi KYC Traveler", icon: ShieldCheck, badge: pendingKycCount },
               { id: "users", label: "Manajemen Pengguna & Role", icon: Users },
               { id: "settings", label: "Pengaturan Komisi & Kurs", icon: Sliders },
             ].map((tab) => (
@@ -344,101 +598,124 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {orders.map((order) => (
-                  <Card key={order.id} className="border-warm-border bg-white p-5 shadow-sm space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-warm-border pb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-xs text-charcoal">
-                          #{order.id}
-                        </span>
-                        <span className="text-xs text-sage">• {order.date}</span>
-                      </div>
-                      <Badge
-                        className={
-                          order.status === "escrow_funded"
-                            ? "bg-blue-100 text-blue-800 text-xs"
-                            : order.status === "delivered"
-                            ? "bg-amber-100 text-amber-800 text-xs"
-                            : order.status === "completed"
-                            ? "bg-emerald-100 text-emerald-800 text-xs"
-                            : order.status === "disputed"
-                            ? "bg-red-100 text-red-800 text-xs"
-                            : "bg-gray-100 text-gray-800 text-xs"
-                        }
-                      >
-                        {order.status === "escrow_funded"
-                          ? "Dana Terkunci di Escrow"
-                          : order.status === "delivered"
-                          ? "Tiba / Menunggu Konfirmasi 48 Jam"
-                          : order.status === "completed"
-                          ? "Selesai & Dana Dicairkan"
-                          : order.status === "disputed"
-                          ? "Sengketa Aktif"
-                          : "Refund Selesai"}
-                      </Badge>
-                    </div>
+              {orders.length === 0 ? (
+                /* Clean Empty State */
+                <Card className="border-warm-border bg-white p-12 text-center shadow-xs">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-olive/10 text-olive mb-3">
+                    <Package className="h-7 w-7" />
+                  </div>
+                  <h4 className="text-base font-bold text-charcoal">
+                    Belum Ada Transaksi Escrow Pending
+                  </h4>
+                  <p className="mx-auto mt-1 max-w-md text-xs text-sage">
+                    Saat ini belum ada pesanan jastip baru yang masuk ke rekening bersama. Semua transaksi baru dari pembeli akan otomatis muncul di tabel ini untuk pengawasan escrow.
+                  </p>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {orders
+                    .filter((order) =>
+                      searchQuery
+                        ? order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          order.buyerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          order.itemName?.toLowerCase().includes(searchQuery.toLowerCase())
+                        : true
+                    )
+                    .map((order) => (
+                      <Card key={order.id} className="border-warm-border bg-white p-5 shadow-sm space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-warm-border pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-xs text-charcoal">
+                              #{order.id}
+                            </span>
+                            <span className="text-xs text-sage">• {order.date}</span>
+                          </div>
+                          <Badge
+                            className={
+                              order.status === "escrow_funded"
+                                ? "bg-blue-100 text-blue-800 text-xs"
+                                : order.status === "delivered"
+                                ? "bg-amber-100 text-amber-800 text-xs"
+                                : order.status === "completed"
+                                ? "bg-emerald-100 text-emerald-800 text-xs"
+                                : order.status === "disputed"
+                                ? "bg-red-100 text-red-800 text-xs"
+                                : "bg-gray-100 text-gray-800 text-xs"
+                            }
+                          >
+                            {order.status === "escrow_funded"
+                              ? "Dana Terkunci di Escrow"
+                              : order.status === "delivered"
+                              ? "Tiba / Menunggu Konfirmasi 48 Jam"
+                              : order.status === "completed"
+                              ? "Selesai & Dana Dicairkan"
+                              : order.status === "disputed"
+                              ? "Sengketa Aktif"
+                              : "Refund Selesai"}
+                          </Badge>
+                        </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                      <div>
-                        <span className="text-sage block">Barang Titipan:</span>
-                        <span className="font-bold text-charcoal">{order.itemName}</span>
-                      </div>
-                      <div>
-                        <span className="text-sage block">Pembeli (Buyer):</span>
-                        <span className="font-semibold text-charcoal">{order.buyerName}</span>
-                        <span className="text-sage block text-[11px]">{order.buyerEmail}</span>
-                      </div>
-                      <div>
-                        <span className="text-sage block">Traveler Pembawa:</span>
-                        <span className="font-semibold text-charcoal">{order.travelerName}</span>
-                      </div>
-                    </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                          <div>
+                            <span className="text-sage block">Barang Titipan:</span>
+                            <span className="font-bold text-charcoal">{order.itemName}</span>
+                          </div>
+                          <div>
+                            <span className="text-sage block">Pembeli (Buyer):</span>
+                            <span className="font-semibold text-charcoal">{order.buyerName}</span>
+                            <span className="text-sage block text-[11px]">{order.buyerEmail}</span>
+                          </div>
+                          <div>
+                            <span className="text-sage block">Traveler Pembawa:</span>
+                            <span className="font-semibold text-charcoal">{order.travelerName}</span>
+                          </div>
+                        </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-warm-border">
-                      <div className="text-xs text-sage flex items-center gap-3">
-                        <span>Total Dana: <strong className="text-olive">{formatRupiah(order.amount)}</strong></span>
-                        <span>Barang: {formatRupiah(order.itemPrice)}</span>
-                        <span>Fee Traveler: {formatRupiah(order.jastipFee)}</span>
-                        <span>Fee Platform: {formatRupiah(order.platformFee)}</span>
-                      </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-warm-border">
+                          <div className="text-xs text-sage flex items-center gap-3">
+                            <span>Total Dana: <strong className="text-olive">{formatRupiah(order.amount)}</strong></span>
+                            <span>Barang: {formatRupiah(order.itemPrice)}</span>
+                            <span>Fee Traveler: {formatRupiah(order.jastipFee)}</span>
+                            <span>Fee Platform: {formatRupiah(order.platformFee)}</span>
+                          </div>
 
-                      <div className="flex items-center gap-2">
-                        {order.status !== "completed" && order.status !== "refunded" && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleReleaseEscrow(order.id)}
-                              className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs h-8"
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                              Cairkan ke Traveler
-                            </Button>
+                          <div className="flex items-center gap-2">
+                            {order.status !== "completed" && order.status !== "refunded" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleReleaseEscrow(order.id)}
+                                  className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs h-8"
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                  Cairkan ke Traveler
+                                </Button>
 
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleRefundBuyer(order.id)}
-                              className="border-red-200 text-red-600 hover:bg-red-50 text-xs h-8"
-                            >
-                              <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                              Refund Pembeli
-                            </Button>
-                          </>
-                        )}
-                        {order.receiptPhoto && (
-                          <a href={order.receiptPhoto} target="_blank" rel="noopener noreferrer">
-                            <Button size="sm" variant="ghost" className="text-xs h-8 text-sage">
-                              <Eye className="h-3.5 w-3.5 mr-1" />
-                              Foto Struk
-                            </Button>
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleRefundBuyer(order.id)}
+                                  className="border-red-200 text-red-600 hover:bg-red-50 text-xs h-8"
+                                >
+                                  <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                                  Refund Pembeli
+                                </Button>
+                              </>
+                            )}
+                            {order.receiptPhoto && (
+                              <a href={order.receiptPhoto} target="_blank" rel="noopener noreferrer">
+                                <Button size="sm" variant="ghost" className="text-xs h-8 text-sage">
+                                  <Eye className="h-3.5 w-3.5 mr-1" />
+                                  Foto Struk
+                                </Button>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -449,72 +726,87 @@ export default function AdminDashboardPage() {
                 Antrean Verifikasi Identitas Traveler (KTP &amp; Paspor)
               </h3>
 
-              <div className="space-y-3">
-                {kycList.map((app) => (
-                  <Card key={app.id} className="border-warm-border bg-white p-5 shadow-sm space-y-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-warm-border pb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-sm text-charcoal">{app.name}</h4>
-                          <span className="text-xs text-olive font-medium">• {app.role}</span>
+              {kycList.length === 0 ? (
+                /* Clean Empty State */
+                <Card className="border-warm-border bg-white p-12 text-center shadow-xs">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-olive/10 text-olive mb-3">
+                    <ShieldCheck className="h-7 w-7" />
+                  </div>
+                  <h4 className="text-base font-bold text-charcoal">
+                    Belum Ada Permohonan KYC Baru
+                  </h4>
+                  <p className="mx-auto mt-1 max-w-md text-xs text-sage">
+                    Semua dokumen identitas traveler telah diverifikasi atau belum ada traveler baru yang mengunggah berkas KTP dan Paspor.
+                  </p>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {kycList.map((app) => (
+                    <Card key={app.id} className="border-warm-border bg-white p-5 shadow-sm space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-warm-border pb-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-sm text-charcoal">{app.name}</h4>
+                            <span className="text-xs text-olive font-medium">• {app.role}</span>
+                          </div>
+                          <p className="text-xs text-sage mt-0.5">
+                            Tujuan Trip: <strong>{app.destination}</strong> (Keberangkatan: {app.departureDate})
+                          </p>
                         </div>
-                        <p className="text-xs text-sage mt-0.5">
-                          Tujuan Trip: <strong>{app.destination}</strong> (Keberangkatan: {app.departureDate})
-                        </p>
-                      </div>
 
-                      <Badge
-                        className={
-                          app.status === "pending"
-                            ? "bg-amber-100 text-amber-800 text-xs"
+                        <Badge
+                          className={
+                            app.status === "pending"
+                              ? "bg-amber-100 text-amber-800 text-xs"
+                              : app.status === "approved"
+                              ? "bg-emerald-100 text-emerald-800 text-xs"
+                              : "bg-red-100 text-red-800 text-xs"
+                          }
+                        >
+                          {app.status === "pending"
+                            ? "Menunggu Verifikasi"
                             : app.status === "approved"
-                            ? "bg-emerald-100 text-emerald-800 text-xs"
-                            : "bg-red-100 text-red-800 text-xs"
-                        }
-                      >
-                        {app.status === "pending"
-                          ? "Menunggu Verifikasi"
-                          : app.status === "approved"
-                          ? "Disetujui (Verified)"
-                          : "Ditolak"}
-                      </Badge>
-                    </div>
+                            ? "Disetujui (Verified)"
+                            : "Ditolak"}
+                        </Badge>
+                      </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                      <div className="rounded-lg bg-sand/30 border border-warm-border p-3">
-                        <span className="text-sage block text-[11px]">Nomor Induk Kependudukan (KTP):</span>
-                        <span className="font-mono font-bold text-charcoal">{app.ktpNumber}</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                        <div className="rounded-lg bg-sand/30 border border-warm-border p-3">
+                          <span className="text-sage block text-[11px]">Nomor Induk Kependudukan (KTP):</span>
+                          <span className="font-mono font-bold text-charcoal">{app.ktpNumber}</span>
+                        </div>
+                        <div className="rounded-lg bg-sand/30 border border-warm-border p-3">
+                          <span className="text-sage block text-[11px]">Nomor Paspor RI:</span>
+                          <span className="font-mono font-bold text-charcoal">{app.passportNumber}</span>
+                        </div>
                       </div>
-                      <div className="rounded-lg bg-sand/30 border border-warm-border p-3">
-                        <span className="text-sage block text-[11px]">Nomor Paspor RI:</span>
-                        <span className="font-mono font-bold text-charcoal">{app.passportNumber}</span>
-                      </div>
-                    </div>
 
-                    {app.status === "pending" && (
-                      <div className="flex justify-end gap-2 pt-2 border-t border-warm-border">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRejectKYC(app.id)}
-                          className="border-red-200 text-red-600 hover:bg-red-50 text-xs"
-                        >
-                          <XCircle className="h-3.5 w-3.5 mr-1" />
-                          Tolak
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleApproveKYC(app.id)}
-                          className="bg-olive hover:bg-olive-light text-white text-xs"
-                        >
-                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                          Setujui &amp; Beri Badge Terverifikasi
-                        </Button>
-                      </div>
-                    )}
-                  </Card>
-                ))}
-              </div>
+                      {app.status === "pending" && (
+                        <div className="flex justify-end gap-2 pt-2 border-t border-warm-border">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleRejectKYC(app.id)}
+                            className="border-red-200 text-red-600 hover:bg-red-50 text-xs"
+                          >
+                            <XCircle className="h-3.5 w-3.5 mr-1" />
+                            Tolak
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleApproveKYC(app.id)}
+                            className="bg-olive hover:bg-olive-light text-white text-xs"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                            Setujui &amp; Beri Badge Terverifikasi
+                          </Button>
+                        </div>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -522,7 +814,7 @@ export default function AdminDashboardPage() {
           {activeTab === "users" && (
             <div className="space-y-4">
               <h3 className="font-bold text-base text-charcoal">
-                Daftar Pengguna Platform
+                Daftar Pengguna Platform ({users.length} Akun Terdaftar)
               </h3>
 
               <Card className="border-warm-border bg-white overflow-hidden shadow-sm">
@@ -534,34 +826,38 @@ export default function AdminDashboardPage() {
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-charcoal">{u.name}</span>
+                          <span className="font-bold text-sm text-charcoal">{u.full_name || u.email?.split("@")[0]}</span>
                           <Badge
                             className={
-                              u.role === "admin"
+                              u.system_role === "admin"
                                 ? "bg-olive text-white text-[10px]"
                                 : "bg-canvas border-warm-border text-sage text-[10px]"
                             }
                           >
-                            {u.role.toUpperCase()}
+                            {(u.system_role || "USER").toUpperCase()}
                           </Badge>
-                          {u.kycStatus === "verified" && (
+                          {u.kyc_status === "verified" && (
                             <Badge className="bg-emerald-100 text-emerald-800 text-[10px]">
                               KYC Verified
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-sage mt-0.5">{u.email} • Bergabung: {u.joinedDate}</p>
+                        <p className="text-xs text-sage mt-0.5">
+                          {u.email} {u.created_at ? `• Terdaftar: ${new Date(u.created_at).toLocaleDateString("id-ID")}` : ""}
+                        </p>
                       </div>
 
                       <div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleToggleAdminRole(u.id)}
-                          className="border-warm-border text-xs text-charcoal hover:bg-sand"
-                        >
-                          {u.role === "admin" ? "Turunkan ke User" : "Jadikan Admin"}
-                        </Button>
+                        {u.email !== "adminsafara@gmail.com" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleToggleAdminRole(u.id)}
+                            className="border-warm-border text-xs text-charcoal hover:bg-sand"
+                          >
+                            {u.system_role === "admin" ? "Turunkan ke User" : "Jadikan Admin"}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}

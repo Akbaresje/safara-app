@@ -170,11 +170,19 @@ export function Navbar() {
   const handleLogout = async () => {
     setDropdownOpen(false);
     setOpen(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("safara_admin_session");
+    }
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
     router.push("/login");
   };
+
+  const isAdmin =
+    user?.email === "adminsafara@gmail.com" ||
+    (typeof window !== "undefined" &&
+      sessionStorage.getItem("safara_admin_session") === "adminsafara@gmail.com");
 
   const displayName = profile?.full_name || user?.email?.split("@")[0] || "Akun Saya";
   const initial = displayName.charAt(0).toUpperCase();
@@ -266,19 +274,21 @@ export function Navbar() {
                       Dashboard Titipan &amp; Trip
                     </Link>
 
-                    <Link
-                      href="/admin"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-charcoal hover:bg-sand"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-olive" />
-                        Admin Dashboard
-                      </div>
-                      <span className="rounded bg-olive/10 px-1.5 py-0.5 text-[9px] font-bold text-olive">
-                        Admin
-                      </span>
-                    </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-charcoal hover:bg-sand"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-olive" />
+                          Admin Dashboard
+                        </div>
+                        <span className="rounded bg-olive/10 px-1.5 py-0.5 text-[9px] font-bold text-olive">
+                          Admin
+                        </span>
+                      </Link>
+                    )}
                   </div>
 
                   <div className="border-t border-warm-border pt-1">
@@ -386,14 +396,16 @@ export function Navbar() {
                       <LayoutDashboard className="h-4 w-4" />
                       Dashboard
                     </Link>
-                    <Link
-                      href="/admin"
-                      onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-olive hover:bg-sand"
-                    >
-                      <Shield className="h-4 w-4" />
-                      Admin Dashboard
-                    </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-olive hover:bg-sand"
+                      >
+                        <Shield className="h-4 w-4" />
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <button
                       type="button"
                       onClick={handleLogout}
