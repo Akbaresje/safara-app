@@ -349,403 +349,401 @@ function ChatContent() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-canvas">
+    <div className="flex h-screen max-h-screen flex-col overflow-hidden bg-canvas">
       <Navbar />
 
-      <main className="flex-1">
-        <div className="mx-auto h-[calc(100vh-4rem)] max-w-7xl">
-          <div className="grid grid-cols-12 h-full border-x border-warm-border bg-white shadow-xs">
-            {/* ── LEFT SIDEBAR: Conversations List ────────────────────────── */}
-            <aside
-              className={`col-span-12 md:col-span-4 border-r border-warm-border flex flex-col bg-white ${
-                mobileView === "chat" ? "hidden md:flex" : "flex"
-              }`}
-            >
-              {/* Sidebar Header */}
-              <div className="p-4 border-b border-warm-border space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-extrabold text-charcoal">
-                    Pesan &amp; Diskusi
-                  </h2>
-                  <Badge className="bg-olive/10 text-olive text-xs font-semibold">
-                    {conversations.length} Obrolan
-                  </Badge>
-                </div>
-
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-sage" />
-                  <Input
-                    placeholder="Cari obrolan atau barang..."
-                    value={searchFilter}
-                    onChange={(e) => setSearchFilter(e.target.value)}
-                    className="pl-9 h-9 text-xs border-warm-border"
-                  />
-                </div>
+      <main className="flex-1 min-h-0 overflow-hidden p-2 sm:p-4">
+        <div className="mx-auto h-full max-w-7xl rounded-2xl border border-warm-border bg-white shadow-xs overflow-hidden flex flex-row">
+          {/* ── LEFT SIDEBAR: Conversations List (Independent Scroll) ─────── */}
+          <aside
+            className={`w-full md:w-80 lg:w-[350px] shrink-0 h-full border-r border-warm-border flex flex-col bg-white overflow-hidden ${
+              mobileView === "chat" ? "hidden md:flex" : "flex"
+            }`}
+          >
+            {/* Sidebar Header - Pinned at top */}
+            <div className="shrink-0 p-4 border-b border-warm-border space-y-3 bg-white">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-extrabold text-charcoal">
+                  Pesan &amp; Diskusi
+                </h2>
+                <Badge className="bg-olive/10 text-olive text-xs font-semibold">
+                  {conversations.length} Obrolan
+                </Badge>
               </div>
 
-              {/* Conversations Scroll Area */}
-              <div className="flex-1 overflow-y-auto divide-y divide-warm-border">
-                {filteredConversations.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-sage">
-                    Tidak ditemukan obrolan yang sesuai
-                  </div>
-                ) : (
-                  filteredConversations.map((conv) => {
-                    const isSelected = conv.id === selectedId;
-                    return (
-                      <button
-                        key={conv.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedId(conv.id);
-                          setMobileView("chat");
-                        }}
-                        className={`w-full p-4 text-left transition-colors flex items-start gap-3 hover:bg-sand/30 ${
-                          isSelected ? "bg-olive/5 border-l-4 border-l-olive" : ""
-                        }`}
-                      >
-                        {/* Avatar */}
-                        <div className="relative shrink-0">
-                          {conv.is_official ? (
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-olive text-white shadow-xs">
-                              <ShieldCheck className="h-6 w-6" />
-                            </div>
-                          ) : conv.participant_avatar ? (
-                            <Image
-                              src={conv.participant_avatar}
-                              alt={conv.participant_name}
-                              width={44}
-                              height={44}
-                              className="h-11 w-11 rounded-full object-cover border border-warm-border"
-                            />
-                          ) : (
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-olive/10 text-olive font-bold text-sm">
-                              {conv.participant_name.charAt(0)}
-                            </div>
-                          )}
-
-                          {conv.status_online && (
-                            <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white" />
-                          )}
-                        </div>
-
-                        {/* Details */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <span className="font-bold text-xs text-charcoal truncate flex items-center gap-1">
-                              {conv.participant_name}
-                              {conv.is_verified && (
-                                <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
-                              )}
-                            </span>
-                            <span className="text-[10px] text-sage shrink-0 ml-1">
-                              {new Date(conv.last_message_at).toLocaleTimeString(
-                                "id-ID",
-                                { hour: "2-digit", minute: "2-digit" }
-                              )}
-                            </span>
-                          </div>
-
-                          <p className="text-[11px] text-sage truncate mb-1.5">
-                            {conv.last_message}
-                          </p>
-
-                          <div className="flex items-center gap-1.5">
-                            {conv.is_official ? (
-                              <Badge className="bg-olive/10 text-olive text-[10px] font-semibold">
-                                Layanan Resmi
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-sand text-charcoal border-warm-border text-[10px] font-medium truncate max-w-[150px]">
-                                {conv.item_name}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })
-                )}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-sage" />
+                <Input
+                  placeholder="Cari obrolan atau barang..."
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="pl-9 h-9 text-xs border-warm-border"
+                />
               </div>
-            </aside>
+            </div>
 
-            {/* ── RIGHT PANEL: Active Chat ─────────────────────────────────── */}
-            <div
-              className={`col-span-12 md:col-span-8 flex flex-col h-full bg-canvas/30 ${
-                mobileView === "list" ? "hidden md:flex" : "flex"
-              }`}
-            >
-              {/* Chat Header */}
-              <div className="p-3.5 border-b border-warm-border bg-white flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {/* Back button for mobile */}
-                  <button
-                    type="button"
-                    onClick={() => setMobileView("list")}
-                    className="md:hidden text-sage hover:text-charcoal p-1 rounded-lg hover:bg-sand"
-                    aria-label="Kembali ke daftar pesan"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </button>
-
-                  <div className="relative">
-                    {activeConversation.is_official ? (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-olive text-white">
-                        <ShieldCheck className="h-5 w-5" />
-                      </div>
-                    ) : activeConversation.participant_avatar ? (
-                      <Image
-                        src={activeConversation.participant_avatar}
-                        alt={activeConversation.participant_name}
-                        width={40}
-                        height={40}
-                        className="h-10 w-10 rounded-full object-cover border border-warm-border"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-olive/10 text-olive font-bold text-sm">
-                        {activeConversation.participant_name.charAt(0)}
-                      </div>
-                    )}
-                    {activeConversation.status_online && (
-                      <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white" />
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-sm text-charcoal">
-                        {activeConversation.participant_name}
-                      </span>
-                      {activeConversation.is_verified && (
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                      )}
-                    </div>
-                    <div className="text-[11px] text-sage flex items-center gap-1.5">
-                      <span>{activeConversation.item_name}</span>
-                      <span>•</span>
-                      <span className="text-emerald-700 font-medium">Online</span>
-                    </div>
-                  </div>
+            {/* Conversations Scroll Area - Independent Scroll Container */}
+            <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-warm-border overscroll-contain">
+              {filteredConversations.length === 0 ? (
+                <div className="p-8 text-center text-xs text-sage">
+                  Tidak ditemukan obrolan yang sesuai
                 </div>
-
-                <div className="flex items-center gap-2">
-                  {!activeConversation.is_official && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setShowQuotationModal(true)}
-                      className="border-olive/30 text-olive hover:bg-olive/10 text-xs hidden sm:flex"
+              ) : (
+                filteredConversations.map((conv) => {
+                  const isSelected = conv.id === selectedId;
+                  return (
+                    <button
+                      key={conv.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedId(conv.id);
+                        setMobileView("chat");
+                      }}
+                      className={`w-full p-4 text-left transition-colors flex items-start gap-3 hover:bg-sand/30 ${
+                        isSelected ? "bg-olive/5 border-l-4 border-l-olive" : ""
+                      }`}
                     >
-                      <FileText className="h-3.5 w-3.5 mr-1" />
-                      Kirim Penawaran Jastip
-                    </Button>
-                  )}
-                  <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    <span>Escrow Aktif</span>
-                  </div>
-                </div>
-              </div>
+                      {/* Avatar */}
+                      <div className="relative shrink-0">
+                        {conv.is_official ? (
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-olive text-white shadow-xs">
+                            <ShieldCheck className="h-6 w-6" />
+                          </div>
+                        ) : conv.participant_avatar ? (
+                          <Image
+                            src={conv.participant_avatar}
+                            alt={conv.participant_name}
+                            width={44}
+                            height={44}
+                            className="h-11 w-11 rounded-full object-cover border border-warm-border"
+                          />
+                        ) : (
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-olive/10 text-olive font-bold text-sm">
+                            {conv.participant_name.charAt(0)}
+                          </div>
+                        )}
 
-              {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-                {activeConversation.messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.is_mine ? "justify-end" : "justify-start"}`}
-                  >
-                    {msg.message_type === "quotation" && msg.quotation ? (
-                      <div className="max-w-[85%] md:max-w-[65%]">
-                        <QuotationCard
-                          itemName={msg.quotation.itemName}
-                          itemPriceIdr={msg.quotation.itemPriceIdr}
-                          jastipFeeIdr={msg.quotation.jastipFeeIdr}
-                          platformFeeIdr={msg.quotation.platformFeeIdr}
-                          totalEscrow={msg.quotation.totalEscrow}
-                          expiresAt={msg.quotation.expiresAt}
-                          isAccepted={msg.quotation.isAccepted}
-                          onAccept={() => {
-                            setConversations((prev) =>
-                              prev.map((c) =>
-                                c.id === selectedId
-                                  ? {
-                                      ...c,
-                                      messages: c.messages.map((m) =>
-                                        m.id === msg.id && m.quotation
-                                          ? {
-                                              ...m,
-                                              quotation: {
-                                                ...m.quotation,
-                                                isAccepted: true,
-                                              },
-                                            }
-                                          : m
-                                      ),
-                                    }
-                                  : c
-                              )
-                            );
-                          }}
-                        />
-                        <div className="text-[10px] text-sage mt-1 text-right">
-                          {new Date(msg.created_at).toLocaleTimeString("id-ID", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </div>
+                        {conv.status_online && (
+                          <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white" />
+                        )}
                       </div>
-                    ) : (
-                      <div
-                        className={`max-w-[85%] md:max-w-[70%] rounded-2xl p-3.5 text-xs shadow-xs ${
-                          msg.is_mine
-                            ? "bg-olive text-white rounded-br-xs"
-                            : "bg-white text-charcoal border border-warm-border rounded-bl-xs"
-                        }`}
-                      >
-                        {!msg.is_mine && (
-                          <div className="font-bold text-olive mb-1 text-[11px]">
-                            {msg.sender_name}
-                          </div>
-                        )}
 
-                        {msg.attachment_url && (
-                          <div className="mb-2 rounded-lg overflow-hidden border border-black/10">
-                            <Image
-                              src={msg.attachment_url}
-                              alt="Foto bukti"
-                              width={400}
-                              height={250}
-                              className="w-full max-h-56 object-cover"
-                            />
-                          </div>
-                        )}
-
-                        <p className="leading-relaxed whitespace-pre-wrap break-words">
-                          {msg.content}
-                        </p>
-
-                        <div
-                          className={`mt-1.5 flex items-center justify-end gap-1 text-[10px] ${
-                            msg.is_mine ? "text-white/70" : "text-sage"
-                          }`}
-                        >
-                          <span>
-                            {new Date(msg.created_at).toLocaleTimeString(
+                      {/* Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-bold text-xs text-charcoal truncate flex items-center gap-1">
+                            {conv.participant_name}
+                            {conv.is_verified && (
+                              <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                            )}
+                          </span>
+                          <span className="text-[10px] text-sage shrink-0 ml-1">
+                            {new Date(conv.last_message_at).toLocaleTimeString(
                               "id-ID",
                               { hour: "2-digit", minute: "2-digit" }
                             )}
                           </span>
-                          {msg.is_mine && <CheckCheck className="h-3 w-3" />}
+                        </div>
+
+                        <p className="text-[11px] text-sage truncate mb-1.5">
+                          {conv.last_message}
+                        </p>
+
+                        <div className="flex items-center gap-1.5">
+                          {conv.is_official ? (
+                            <Badge className="bg-olive/10 text-olive text-[10px] font-semibold">
+                              Layanan Resmi
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-sand text-charcoal border-warm-border text-[10px] font-medium truncate max-w-[150px]">
+                              {conv.item_name}
+                            </Badge>
+                          )}
                         </div>
                       </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </aside>
+
+          {/* ── RIGHT PANEL: Active Chat (Independent Scroll) ──────────────── */}
+          <div
+            className={`flex-1 min-w-0 h-full flex flex-col bg-[#FAF8F5] overflow-hidden ${
+              mobileView === "list" ? "hidden md:flex" : "flex"
+            }`}
+          >
+            {/* Chat Header - Pinned at top */}
+            <div className="shrink-0 p-3.5 border-b border-warm-border bg-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {/* Back button for mobile */}
+                <button
+                  type="button"
+                  onClick={() => setMobileView("list")}
+                  className="md:hidden text-sage hover:text-charcoal p-1 rounded-lg hover:bg-sand"
+                  aria-label="Kembali ke daftar pesan"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+
+                <div className="relative">
+                  {activeConversation.is_official ? (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-olive text-white">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                  ) : activeConversation.participant_avatar ? (
+                    <Image
+                      src={activeConversation.participant_avatar}
+                      alt={activeConversation.participant_name}
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 rounded-full object-cover border border-warm-border"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-olive/10 text-olive font-bold text-sm">
+                      {activeConversation.participant_name.charAt(0)}
+                    </div>
+                  )}
+                  {activeConversation.status_online && (
+                    <div className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-white" />
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-sm text-charcoal">
+                      {activeConversation.participant_name}
+                    </span>
+                    {activeConversation.is_verified && (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                     )}
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
+                  <div className="text-[11px] text-sage flex items-center gap-1.5">
+                    <span>{activeConversation.item_name}</span>
+                    <span>•</span>
+                    <span className="text-emerald-700 font-medium">Online</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Quick Prompt Chips (when in Support conversation) */}
-              {activeConversation.id === "support-official" && (
-                <div className="px-4 py-2 bg-white/70 border-t border-warm-border overflow-x-auto">
-                  <div className="flex items-center gap-1.5 whitespace-nowrap">
-                    <span className="text-[10px] font-bold text-sage mr-1 flex items-center gap-1">
-                      <Headphones className="h-3 w-3 text-olive" /> Bantuan Cepat:
-                    </span>
-                    {QUICK_TOPICS.map((topic, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => handleSelectQuickTopic(topic)}
-                        className="rounded-full border border-warm-border bg-white px-2.5 py-1 text-[11px] font-medium text-charcoal hover:border-olive hover:text-olive transition-colors shadow-2xs"
-                      >
-                        {topic.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Image attachment preview badge */}
-              {attachedImage && (
-                <div className="px-4 py-2 bg-sand/40 border-t border-warm-border flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="h-10 w-10 rounded overflow-hidden border border-warm-border">
-                      <Image
-                        src={attachedImage}
-                        alt="Preview"
-                        width={40}
-                        height={40}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                    <span className="text-xs text-charcoal font-medium">
-                      Foto siap dikirim
-                    </span>
-                  </div>
+              <div className="flex items-center gap-2">
+                {!activeConversation.is_official && (
                   <Button
                     size="sm"
-                    variant="ghost"
-                    onClick={() => setAttachedImage(null)}
-                    className="h-7 w-7 p-0 text-sage hover:text-charcoal"
+                    variant="outline"
+                    onClick={() => setShowQuotationModal(true)}
+                    className="border-olive/30 text-olive hover:bg-olive/10 text-xs hidden sm:flex"
                   >
-                    <X className="h-4 w-4" />
+                    <FileText className="h-3.5 w-3.5 mr-1" />
+                    Kirim Penawaran Jastip
                   </Button>
+                )}
+                <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>Escrow Aktif</span>
                 </div>
-              )}
+              </div>
+            </div>
 
-              {/* Message Input Footer */}
-              <div className="p-3.5 border-t border-warm-border bg-white">
-                <div className="flex items-end gap-2">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageUpload}
-                    accept="image/*"
-                    className="hidden"
-                  />
+            {/* Messages Area - Independent Scroll Container */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5 overscroll-contain">
+              {activeConversation.messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.is_mine ? "justify-end" : "justify-start"}`}
+                >
+                  {msg.message_type === "quotation" && msg.quotation ? (
+                    <div className="max-w-[85%] md:max-w-[65%]">
+                      <QuotationCard
+                        itemName={msg.quotation.itemName}
+                        itemPriceIdr={msg.quotation.itemPriceIdr}
+                        jastipFeeIdr={msg.quotation.jastipFeeIdr}
+                        platformFeeIdr={msg.quotation.platformFeeIdr}
+                        totalEscrow={msg.quotation.totalEscrow}
+                        expiresAt={msg.quotation.expiresAt}
+                        isAccepted={msg.quotation.isAccepted}
+                        onAccept={() => {
+                          setConversations((prev) =>
+                            prev.map((c) =>
+                              c.id === selectedId
+                                ? {
+                                    ...c,
+                                    messages: c.messages.map((m) =>
+                                      m.id === msg.id && m.quotation
+                                        ? {
+                                            ...m,
+                                            quotation: {
+                                              ...m.quotation,
+                                              isAccepted: true,
+                                            },
+                                          }
+                                        : m
+                                    ),
+                                  }
+                                : c
+                            )
+                          );
+                        }}
+                      />
+                      <div className="text-[10px] text-sage mt-1 text-right">
+                        {new Date(msg.created_at).toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className={`max-w-[85%] md:max-w-[70%] rounded-2xl p-3.5 text-xs shadow-xs ${
+                        msg.is_mine
+                          ? "bg-olive text-white rounded-br-xs"
+                          : "bg-white text-charcoal border border-warm-border rounded-bl-xs"
+                      }`}
+                    >
+                      {!msg.is_mine && (
+                        <div className="font-bold text-olive mb-1 text-[11px]">
+                          {msg.sender_name}
+                        </div>
+                      )}
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Lampirkan Foto Produk / Struk"
-                    className="text-sage hover:text-olive shrink-0 h-10 w-10"
-                  >
-                    <ImageIcon className="h-5 w-5" />
-                  </Button>
+                      {msg.attachment_url && (
+                        <div className="mb-2 rounded-lg overflow-hidden border border-black/10">
+                          <Image
+                            src={msg.attachment_url}
+                            alt="Foto bukti"
+                            width={400}
+                            height={250}
+                            className="w-full max-h-56 object-cover"
+                          />
+                        </div>
+                      )}
 
-                  <div className="flex-1">
-                    <Input
-                      value={messageInput}
-                      onChange={(e) => setMessageInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                      placeholder="Ketik pesan untuk didiskusikan... (Enter untuk kirim)"
-                      className="h-10 text-xs sm:text-sm border-warm-border focus-visible:ring-olive"
+                      <p className="leading-relaxed whitespace-pre-wrap break-words">
+                        {msg.content}
+                      </p>
+
+                      <div
+                        className={`mt-1.5 flex items-center justify-end gap-1 text-[10px] ${
+                          msg.is_mine ? "text-white/70" : "text-sage"
+                        }`}
+                      >
+                        <span>
+                          {new Date(msg.created_at).toLocaleTimeString(
+                            "id-ID",
+                            { hour: "2-digit", minute: "2-digit" }
+                          )}
+                        </span>
+                        {msg.is_mine && <CheckCheck className="h-3 w-3" />}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Quick Prompt Chips (when in Support conversation) */}
+            {activeConversation.id === "support-official" && (
+              <div className="shrink-0 px-4 py-2 bg-white/80 border-t border-warm-border overflow-x-auto">
+                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="text-[10px] font-bold text-sage mr-1 flex items-center gap-1">
+                    <Headphones className="h-3 w-3 text-olive" /> Bantuan Cepat:
+                  </span>
+                  {QUICK_TOPICS.map((topic, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => handleSelectQuickTopic(topic)}
+                      className="rounded-full border border-warm-border bg-white px-2.5 py-1 text-[11px] font-medium text-charcoal hover:border-olive hover:text-olive transition-colors shadow-2xs"
+                    >
+                      {topic.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Image attachment preview badge */}
+            {attachedImage && (
+              <div className="shrink-0 px-4 py-2 bg-sand/40 border-t border-warm-border flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-10 w-10 rounded overflow-hidden border border-warm-border">
+                    <Image
+                      src={attachedImage}
+                      alt="Preview"
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
                     />
                   </div>
-
-                  <Button
-                    type="button"
-                    onClick={() => handleSendMessage()}
-                    disabled={!messageInput.trim() && !attachedImage}
-                    className="bg-olive hover:bg-olive-light text-white shrink-0 h-10 px-4"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="mt-2 text-[10px] text-sage text-center flex items-center justify-center gap-1">
-                  <ShieldCheck className="h-3 w-3 text-emerald-600" />
-                  <span>
-                    Seluruh percakapan dienkripsi dan menjadi bukti perlindungan garansi rekening bersama
+                  <span className="text-xs text-charcoal font-medium">
+                    Foto siap dikirim
                   </span>
                 </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setAttachedImage(null)}
+                  className="h-7 w-7 p-0 text-sage hover:text-charcoal"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Message Input Footer - Pinned at bottom */}
+            <div className="shrink-0 p-3.5 border-t border-warm-border bg-white">
+              <div className="flex items-end gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Lampirkan Foto Produk / Struk"
+                  className="text-sage hover:text-olive shrink-0 h-10 w-10"
+                >
+                  <ImageIcon className="h-5 w-5" />
+                </Button>
+
+                <div className="flex-1">
+                  <Input
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    placeholder="Ketik pesan untuk didiskusikan... (Enter untuk kirim)"
+                    className="h-10 text-xs sm:text-sm border-warm-border focus-visible:ring-olive"
+                  />
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={() => handleSendMessage()}
+                  disabled={!messageInput.trim() && !attachedImage}
+                  className="bg-olive hover:bg-olive-light text-white shrink-0 h-10 px-4"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="mt-2 text-[10px] text-sage text-center flex items-center justify-center gap-1">
+                <ShieldCheck className="h-3 w-3 text-emerald-600" />
+                <span>
+                  Seluruh percakapan dienkripsi dan menjadi bukti perlindungan garansi rekening bersama
+                </span>
               </div>
             </div>
           </div>
