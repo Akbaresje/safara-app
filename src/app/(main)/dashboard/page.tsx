@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/navbar";
@@ -17,8 +17,10 @@ import {
   Plus,
   MapPin,
   CheckCircle2,
+  Settings,
 } from "lucide-react";
 import { formatRupiah, ORDER_STATUS_LABELS } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 
 // Mock user active orders
 const MOCK_BUYER_ORDERS = [
@@ -67,7 +69,57 @@ const MOCK_TRAVELER_TRIPS = [
 ];
 
 export default function DashboardPage() {
+  const supabase = createClient();
   const [activeTab, setActiveTab] = useState<"buyer" | "traveler">("buyer");
+  const [userName, setUserName] = useState("Pengguna Safara");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [kycStatus, setKycStatus] = useState("unverified");
+
+  useEffect(() => {
+    async function loadUser() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: profile } = await (supabase.from("profiles") as unknown as {
+          select: (columns: string) => {
+            eq: (col: string, val: string) => {
+              single: () => Promise<{
+                data: { full_name?: string; avatar_url?: string | null; kyc_status?: string } | null;
+              }>;
+            };
+          };
+        })
+          .select("full_name, avatar_url, kyc_status")
+          .eq("id", user.id)
+          .single();
+
+        if (profile) {
+          setUserName(
+            profile.full_name || user.email?.split("@")[0] || "Pengguna Safara"
+          );
+          setUserAvatar(profile.avatar_url || null);
+          setKycStatus(profile.kyc_status || "unverified");
+        } else {
+          setUserName(
+            user.user_metadata?.full_name ||
+              user.user_metadata?.name ||
+              user.email?.split("@")[0] ||
+              "Pengguna Safara"
+          );
+          setUserAvatar(
+            user.user_metadata?.avatar_url ||
+              user.user_metadata?.picture ||
+              null
+          );
+        }
+      }
+    }
+    loadUser();
+  }, [supabase]);
+
+  const initial = userName.charAt(0).toUpperCase();
 
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
@@ -80,9 +132,19 @@ export default function DashboardPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <div className="h-16 w-16 rounded-full bg-olive/10 flex items-center justify-center font-bold text-2xl text-olive">
-                    A
-                  </div>
+                  {userAvatar ? (
+                    <Image
+                      src={userAvatar}
+                      alt={userName}
+                      width={64}
+                      height={64}
+                      className="h-16 w-16 rounded-full object-cover border-2 border-warm-border"
+                    />
+                  ) : (
+                    <div className="h-16 w-16 rounded-full bg-olive/10 flex items-center justify-center font-bold text-2xl text-olive">
+                      {initial}
+                    </div>
+                  )}
                   <div className="absolute -bottom-1 -right-1 bg-emerald-600 rounded-full p-1 text-white">
                     <ShieldCheck className="h-3.5 w-3.5" />
                   </div>
@@ -90,27 +152,39 @@ export default function DashboardPage() {
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold text-charcoal">Ahmad Disk</h1>
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-xs">
-                      Terverifikasi KTP
+                    <h1 className="text-xl font-bold text-charcoal">{userName}</h1>
+                    <Badge
+                      className={
+                        kycStatus === "verified"
+                          ? "bg-emerald-100 text-emerald-800 border-emerald-200 text-xs"
+                          : "bg-olive/10 text-olive border-olive/20 text-xs"
+                      }
+                    >
+                      {kycStatus === "verified" ? "Terverifikasi KTP" : "Member Terdaftar"}
                     </Badge>
                   </div>
                   <p className="text-xs text-sage mt-0.5">
-                    Member Safara sejak Sept 2026 • Skor Kepercayaan: 5.0 / 5.0
+                    Member Safara Aktif • Skor Kepercayaan: 5.0 / 5.0
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <Link href="/profile">
+                  <Button variant="outline" size="sm" className="border-warm-border text-charcoal hover:bg-sand text-xs">
+                    <Settings className="h-3.5 w-3.5 mr-1 text-sage" />
+                    Atur Profil
+                  </Button>
+                </Link>
                 <Link href="/trips/new">
-                  <Button variant="outline" size="sm" className="border-warm-border text-charcoal hover:bg-sand">
-                    <Plane className="h-4 w-4 mr-1.5" />
+                  <Button variant="outline" size="sm" className="border-warm-border text-charcoal hover:bg-sand text-xs">
+                    <Plane className="h-3.5 w-3.5 mr-1" />
                     Buka Trip Jastip
                   </Button>
                 </Link>
                 <Link href="/listings/new">
-                  <Button size="sm" className="bg-olive hover:bg-olive-light text-white">
-                    <Plus className="h-4 w-4 mr-1.5" />
+                  <Button size="sm" className="bg-olive hover:bg-olive-light text-white text-xs">
+                    <Plus className="h-3.5 w-3.5 mr-1" />
                     Posting Titipan Baru
                   </Button>
                 </Link>
