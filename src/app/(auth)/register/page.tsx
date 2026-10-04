@@ -8,104 +8,168 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
-import { Phone, Mail, Loader2, ArrowLeft } from "lucide-react";
+import { Phone, Mail, Lock, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [method, setMethod] = useState<"phone" | "email">("phone");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [email, setEmail] = useState("");
+  const [method, setMethod] = useState<"email" | "phone">("email");
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Google OAuth Sign-In ──────────────────────────────────────────────────
+  const handleGoogleSignUp = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal mendaftar dengan Google";
+      setError(message);
+      setLoading(false);
+    }
+  };
+
+  // ── Email + Password Registration ─────────────────────────────────────────
+  const handleEmailRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName || !email || !password) {
+      setError("Mohon lengkapi semua kolom");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Kata sandi minimal 6 karakter");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) throw error;
+
+    if (data.user) {
+      // Upsert into profiles table
+      const profileTable = supabase.from("profiles") as unknown as {
+        upsert: (values: Record<string, unknown>) => Promise<{ error: Error | null }>;
+      };
+
+      await profileTable.upsert({
+        id: data.user.id,
+        full_name: fullName,
+        email: email,
+        kyc_status: "unverified",
+      });
+
+      // If user has an active session (email confirmation off in Supabase)
+      if (data.session) {
+        router.push("/dashboard");
+      } else {
+        // Email confirmation is required by Supabase
+        setSuccessMessage(
+          "Pendaftaran berhasil! Jika aktivasi email aktif, silakan periksa inbox/spam email Anda untuk verifikasi."
+        );
+      }
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Gagal mendaftar akun";
+    setError(message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // ── Phone OTP Flow ────────────────────────────────────────────────────────
   const handleSendOTP = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      if (method === "phone") {
-        const formattedPhone = phoneNumber.startsWith("0")
-          ? `+62${phoneNumber.slice(1)}`
-          : phoneNumber.startsWith("+62")
-          ? phoneNumber
-          : `+62${phoneNumber}`;
+      const formattedPhone = phoneNumber.startsWith("0")
+        ? `+62${phoneNumber.slice(1)}`
+        : phoneNumber.startsWith("+62")
+        ? phoneNumber
+        : `+62${phoneNumber}`;
 
-        const { error } = await supabase.auth.signInWithOtp({
-          phone: formattedPhone,
-        });
+      const { error } = await supabase.auth.signInWithOtp({
+        phone: formattedPhone,
+      });
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signInWithOtp({
-          email,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
-
-        if (error) throw error;
-      }
-
+      if (error) throw error;
       setOtpSent(true);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Gagal mengirim kode OTP";
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Gagal mengirim OTP. Pastikan provider SMS aktif di Supabase.";
       setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerifyAndRegister = async () => {
+  const handleVerifyPhoneOTP = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      if (method === "phone") {
-        const formattedPhone = phoneNumber.startsWith("0")
-          ? `+62${phoneNumber.slice(1)}`
-          : phoneNumber.startsWith("+62")
-          ? phoneNumber
-          : `+62${phoneNumber}`;
+      const formattedPhone = phoneNumber.startsWith("0")
+        ? `+62${phoneNumber.slice(1)}`
+        : phoneNumber.startsWith("+62")
+        ? phoneNumber
+        : `+62${phoneNumber}`;
 
-        const { error } = await supabase.auth.verifyOtp({
-          phone: formattedPhone,
-          token: otp,
-          type: "sms",
-        });
+      const { error } = await supabase.auth.verifyOtp({
+        phone: formattedPhone,
+        token: otp,
+        type: "sms",
+      });
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.verifyOtp({
-          email,
-          token: otp,
-          type: "email",
-        });
+      if (error) throw error;
 
-        if (error) throw error;
-      }
-
-      // Create/Update profile
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const profileTable = supabase.from("profiles") as unknown as {
           upsert: (values: Record<string, unknown>) => Promise<{ error: Error | null }>;
         };
-        const { error: profileError } = await profileTable.upsert({
+        await profileTable.upsert({
           id: user.id,
           full_name: fullName,
-          email: user.email || email,
-          phone_number: user.phone || phoneNumber,
+          phone_number: formattedPhone,
           kyc_status: "unverified",
         });
 
-        if (profileError) throw profileError;
-        router.push("/onboarding/role-select");
+        router.push("/dashboard");
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Gagal verifikasi OTP";
@@ -117,81 +181,192 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-canvas to-sand p-4">
-      <Link href="/" className="mb-8 flex items-center gap-2 text-sage hover:text-charcoal">
+      <Link href="/" className="mb-8 flex items-center gap-2 text-sage hover:text-charcoal text-sm">
         <ArrowLeft className="h-4 w-4" />
         Kembali ke Beranda
       </Link>
 
       <Card className="w-full max-w-md border-warm-border bg-white p-8 shadow-xl">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-olive text-white font-bold text-xl">
+        <div className="text-center mb-6">
+          <Link href="/" className="inline-flex items-center gap-2 mb-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-olive text-white font-bold text-xl">
               S
             </div>
           </Link>
           <h1 className="text-2xl font-bold text-charcoal">Daftar Akun Safara</h1>
-          <p className="text-sm text-sage mt-2">
-            Mulai jastip amanah dari Tanah Suci & Turki
+          <p className="text-xs text-sage mt-1">
+            Platform jastip terpercaya dengan proteksi rekening bersama (escrow)
           </p>
         </div>
 
         {error && (
-          <Alert className="mb-6 border-red-200 bg-red-50 text-red-800">
+          <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 text-xs">
             {error}
           </Alert>
         )}
 
-        {!otpSent ? (
-          <>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
-                  Nama Lengkap Sesuai KTP
-                </Label>
+        {successMessage && (
+          <Alert className="mb-4 border-emerald-200 bg-emerald-50 text-emerald-800 text-xs flex items-start gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div>{successMessage}</div>
+          </Alert>
+        )}
+
+        {/* Google OAuth Button */}
+        <Button
+          onClick={handleGoogleSignUp}
+          variant="outline"
+          disabled={loading}
+          className="w-full border-warm-border hover:bg-canvas text-charcoal font-semibold text-xs py-5"
+        >
+          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
+          </svg>
+          Daftar dengan Google
+        </Button>
+
+        <div className="relative my-5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-warm-border" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white px-2 text-sage">atau daftar manual</span>
+          </div>
+        </div>
+
+        {/* Method Tab Selector */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => setMethod("email")}
+            className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-xs font-semibold transition-all ${
+              method === "email"
+                ? "border-olive bg-olive/5 text-olive ring-2 ring-olive/20"
+                : "border-warm-border bg-canvas text-sage hover:text-charcoal"
+            }`}
+          >
+            <Mail className="h-4 w-4" />
+            Email &amp; Password
+          </button>
+          <button
+            type="button"
+            onClick={() => setMethod("phone")}
+            className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-xs font-semibold transition-all ${
+              method === "phone"
+                ? "border-olive bg-olive/5 text-olive ring-2 ring-olive/20"
+                : "border-warm-border bg-canvas text-sage hover:text-charcoal"
+            }`}
+          >
+            <Phone className="h-4 w-4" />
+            WhatsApp OTP
+          </button>
+        </div>
+
+        {/* Form Body */}
+        {method === "email" ? (
+          <form onSubmit={handleEmailRegister} className="space-y-3.5">
+            <div>
+              <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
+                Nama Lengkap
+              </Label>
+              <Input
+                type="text"
+                placeholder="Contoh: Muhammad Rizky"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="mt-1"
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
+                Alamat Email
+              </Label>
+              <Input
+                type="email"
+                placeholder="nama@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1"
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
+                Kata Sandi (Password)
+              </Label>
+              <div className="relative mt-1">
                 <Input
-                  type="text"
-                  placeholder="Nama Lengkap"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="mt-1.5 font-semibold"
+                  type="password"
+                  placeholder="Minimal 6 karakter"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10"
                   disabled={loading}
+                  required
                 />
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-sage" />
               </div>
+            </div>
 
-              {/* Method Selector */}
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setMethod("phone")}
-                  className={`flex items-center justify-center gap-2 rounded-lg border p-3 text-sm font-semibold transition-all ${
-                    method === "phone"
-                      ? "border-olive bg-olive/5 text-olive ring-2 ring-olive/20"
-                      : "border-warm-border bg-canvas text-sage hover:text-charcoal"
-                  }`}
-                >
-                  <Phone className="h-4 w-4" />
-                  WhatsApp
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMethod("email")}
-                  className={`flex items-center justify-center gap-2 rounded-lg border p-3 text-sm font-semibold transition-all ${
-                    method === "email"
-                      ? "border-olive bg-olive/5 text-olive ring-2 ring-olive/20"
-                      : "border-warm-border bg-canvas text-sage hover:text-charcoal"
-                  }`}
-                >
-                  <Mail className="h-4 w-4" />
-                  Email
-                </button>
-              </div>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-olive hover:bg-olive-light text-white font-semibold mt-2 py-5 text-sm"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Mendaftarkan...
+                </>
+              ) : (
+                "Buat Akun Safara"
+              )}
+            </Button>
+          </form>
+        ) : (
+          /* Phone OTP Flow */
+          <div className="space-y-3.5">
+            <div>
+              <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
+                Nama Lengkap
+              </Label>
+              <Input
+                type="text"
+                placeholder="Contoh: Muhammad Rizky"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="mt-1"
+                disabled={loading || otpSent}
+              />
+            </div>
 
-              {method === "phone" ? (
+            {!otpSent ? (
+              <>
                 <div>
                   <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
                     Nomor WhatsApp
                   </Label>
-                  <div className="relative mt-1.5">
+                  <div className="relative mt-1">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-sage">
                       +62
                     </span>
@@ -205,79 +380,79 @@ export default function RegisterPage() {
                     />
                   </div>
                 </div>
-              ) : (
+
+                <Button
+                  type="button"
+                  onClick={handleSendOTP}
+                  disabled={loading || !fullName || !phoneNumber}
+                  className="w-full bg-olive hover:bg-olive-light text-white font-semibold mt-2 py-5 text-sm"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Mengirim OTP...
+                    </>
+                  ) : (
+                    "Kirim Kode Verifikasi"
+                  )}
+                </Button>
+              </>
+            ) : (
+              <div className="space-y-3">
                 <div>
                   <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
-                    Alamat Email
+                    Kode OTP (6 Digit)
                   </Label>
                   <Input
-                    type="email"
-                    placeholder="nama@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="mt-1.5 font-semibold"
+                    type="text"
+                    maxLength={6}
+                    placeholder="123456"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    className="mt-1 font-mono text-center text-xl tracking-widest"
                     disabled={loading}
                   />
+                  <p className="mt-1 text-[11px] text-sage">
+                    Kode OTP dikirim ke +62{phoneNumber}
+                  </p>
                 </div>
-              )}
 
-              <Button
-                onClick={handleSendOTP}
-                disabled={loading || !fullName || (method === "phone" ? !phoneNumber : !email)}
-                className="w-full bg-olive hover:bg-olive-light text-white font-semibold mt-4"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Mengirim...
-                  </>
-                ) : (
-                  "Kirim Kode Verifikasi"
-                )}
-              </Button>
-            </div>
-          </>
-        ) : (
-          <div className="space-y-4">
-            <div>
-              <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
-                Kode Verifikasi (6 Digit)
-              </Label>
-              <Input
-                type="text"
-                maxLength={6}
-                placeholder="123456"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                className="mt-1.5 font-mono text-center text-2xl tracking-widest"
-                disabled={loading}
-              />
-              <p className="mt-1 text-xs text-sage">
-                Kode OTP dikirim ke {method === "phone" ? `+62${phoneNumber}` : email}
-              </p>
-            </div>
+                <Button
+                  type="button"
+                  onClick={handleVerifyPhoneOTP}
+                  disabled={loading || otp.length !== 6}
+                  className="w-full bg-olive hover:bg-olive-light text-white font-semibold py-5 text-sm"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Memverifikasi...
+                    </>
+                  ) : (
+                    "Verifikasi & Selesai"
+                  )}
+                </Button>
 
-            <Button
-              onClick={handleVerifyAndRegister}
-              disabled={loading || otp.length !== 6}
-              className="w-full bg-olive hover:bg-olive-light text-white font-semibold"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Mendaftar...
-                </>
-              ) : (
-                "Selesaikan Pendaftaran"
-              )}
-            </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtp("");
+                  }}
+                  className="w-full text-xs text-sage"
+                >
+                  Ganti Nomor WhatsApp
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
         <p className="mt-6 text-center text-xs text-sage">
           Sudah punya akun?{" "}
           <Link href="/login" className="font-semibold text-olive hover:underline">
-            Masuk
+            Masuk Sekarang
           </Link>
         </p>
       </Card>

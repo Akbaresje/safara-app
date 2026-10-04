@@ -3,7 +3,7 @@ import { Footer } from "@/components/layout/footer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, MessageCircle, Clock, MapPin, ShieldCheck } from "lucide-react";
+import { Mail, MessageCircle, Clock, MapPin } from "lucide-react";
 
 export default function ContactPage() {
   return (

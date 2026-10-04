@@ -24,20 +24,38 @@ export async function GET(request: Request) {
               );
             } catch {
               // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
             }
           },
         },
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error && data?.user) {
+      // Upsert user profile from Google / OAuth metadata
+      const profileTable = supabase.from("profiles") as unknown as {
+        upsert: (values: Record<string, unknown>) => Promise<{ error: Error | null }>;
+      };
+
+      await profileTable.upsert({
+        id: data.user.id,
+        full_name:
+          data.user.user_metadata?.full_name ||
+          data.user.user_metadata?.name ||
+          data.user.email?.split("@")[0] ||
+          "Pengguna Safara",
+        email: data.user.email || "",
+        avatar_url:
+          data.user.user_metadata?.avatar_url ||
+          data.user.user_metadata?.picture ||
+          null,
+        kyc_status: "unverified",
+      });
+
       return NextResponse.redirect(`${origin}/dashboard`);
     }
   }
 
-  // URL to redirect to after sign in process completes
+  // URL to redirect to after sign in failure
   return NextResponse.redirect(`${origin}/login?error=auth-failed`);
 }

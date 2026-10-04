@@ -11,7 +11,6 @@ import {
   PackageCheck,
   Plane,
   Banknote,
-  CheckCircle2,
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
