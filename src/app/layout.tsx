@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { SmoothScroll } from "@/components/smooth-scroll";
+import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -45,10 +46,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${plusJakarta.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col pb-16 md:pb-0">
         <SmoothScroll>
           {children}
         </SmoothScroll>
+        <MobileBottomNav />
         <Toaster position="top-right" richColors />
       </body>
     </html>

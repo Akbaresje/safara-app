@@ -164,63 +164,63 @@ export default function DashboardPage() {
       <main className="flex-1 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
           {/* User Profile Header Card */}
-          <Card className="border-warm-border bg-white p-6 shadow-sm">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <Card className="border-warm-border bg-white p-6 sm:p-8 rounded-3xl shadow-xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   {userAvatar ? (
                     <Image
                       src={userAvatar}
                       alt={userName}
-                      width={64}
-                      height={64}
-                      className="h-16 w-16 rounded-full object-cover border-2 border-warm-border"
+                      width={68}
+                      height={68}
+                      className="h-17 w-17 rounded-2xl object-cover border-2 border-warm-border shadow-2xs"
                     />
                   ) : (
-                    <div className="h-16 w-16 rounded-full bg-olive/10 flex items-center justify-center font-bold text-2xl text-olive">
+                    <div className="h-17 w-17 rounded-2xl bg-olive/10 flex items-center justify-center font-extrabold text-2xl text-olive shadow-2xs">
                       {initial}
                     </div>
                   )}
-                  <div className="absolute -bottom-1 -right-1 bg-emerald-600 rounded-full p-1 text-white">
-                    <ShieldCheck className="h-3.5 w-3.5" />
+                  <div className="absolute -bottom-1 -right-1 bg-emerald-600 rounded-full p-1.5 text-white shadow-xs">
+                    <ShieldCheck className="h-4 w-4" />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-xl font-bold text-charcoal">{userName}</h1>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl sm:text-2xl font-extrabold text-charcoal">{userName}</h1>
                     <Badge
                       className={
                         kycStatus === "verified"
-                          ? "bg-emerald-100 text-emerald-800 border-emerald-200 text-xs"
-                          : "bg-olive/10 text-olive border-olive/20 text-xs"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200 text-xs px-2.5 py-0.5 font-bold"
+                          : "bg-olive/10 text-olive border-olive/20 text-xs px-2.5 py-0.5 font-bold"
                       }
                     >
-                      {kycStatus === "verified" ? "Terverifikasi KTP" : "Member Terdaftar"}
+                      {kycStatus === "verified" ? "Terverifikasi KTP & Paspor" : "Member Terdaftar"}
                     </Badge>
                   </div>
-                  <p className="text-xs text-sage mt-0.5">
-                    Member Safara Aktif • Proteksi Rekening Bersama (Escrow)
+                  <p className="text-xs sm:text-sm text-sage mt-1 font-medium">
+                    Member Safara Aktif • Proteksi Rekening Bersama (Escrow) 100%
                   </p>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <Link href="/profile">
-                  <Button variant="outline" size="sm" className="border-warm-border text-charcoal hover:bg-sand text-xs">
-                    <Settings className="h-3.5 w-3.5 mr-1 text-sage" />
+                  <Button variant="outline" className="h-10 px-3.5 rounded-xl border-warm-border text-charcoal hover:bg-sand text-xs font-bold active:scale-[0.98]">
+                    <Settings className="h-4 w-4 mr-1 text-sage" />
                     Atur Profil
                   </Button>
                 </Link>
                 <Link href="/trips/new">
-                  <Button variant="outline" size="sm" className="border-warm-border text-charcoal hover:bg-sand text-xs">
-                    <Plane className="h-3.5 w-3.5 mr-1" />
+                  <Button variant="outline" className="h-10 px-3.5 rounded-xl border-warm-border text-charcoal hover:bg-sand text-xs font-bold active:scale-[0.98]">
+                    <Plane className="h-4 w-4 mr-1 text-olive" />
                     Buka Trip Jastip
                   </Button>
                 </Link>
                 <Link href="/listings/new">
-                  <Button size="sm" className="bg-olive hover:bg-olive-light text-white text-xs">
-                    <Plus className="h-3.5 w-3.5 mr-1" />
+                  <Button className="h-10 px-4 rounded-xl bg-olive hover:bg-olive-light text-white text-xs font-bold shadow-xs active:scale-[0.98]">
+                    <Plus className="h-4 w-4 mr-1" />
                     Posting Titipan Baru
                   </Button>
                 </Link>
@@ -228,63 +228,65 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Stats Grid */}
-            <div className="mt-6 pt-6 border-t border-warm-border grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="p-3 rounded-lg bg-canvas">
-                <div className="text-xs text-sage">Dana Escrow Terlindungi</div>
-                <div className="text-lg font-bold text-olive mt-0.5">
+            <div className="mt-8 pt-6 border-t border-warm-border/80 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="p-4 rounded-2xl bg-canvas border border-warm-border/60">
+                <div className="text-xs font-semibold text-sage">Dana Escrow Terlindungi</div>
+                <div className="text-lg sm:text-xl font-extrabold text-olive mt-1 tabular-nums tracking-tight">
                   {formatRupiah(totalEscrow)}
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-canvas">
-                <div className="text-xs text-sage">Pesanan Titipan Aktif</div>
-                <div className="text-lg font-bold text-charcoal mt-0.5">
+              <div className="p-4 rounded-2xl bg-canvas border border-warm-border/60">
+                <div className="text-xs font-semibold text-sage">Pesanan Titipan Aktif</div>
+                <div className="text-lg sm:text-xl font-extrabold text-charcoal mt-1 tabular-nums tracking-tight">
                   {activeOrdersCount} Titipan
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-canvas">
-                <div className="text-xs text-sage">Trip Aktif Anda</div>
-                <div className="text-lg font-bold text-charcoal mt-0.5">
+              <div className="p-4 rounded-2xl bg-canvas border border-warm-border/60">
+                <div className="text-xs font-semibold text-sage">Trip Aktif Anda</div>
+                <div className="text-lg sm:text-xl font-extrabold text-charcoal mt-1 tabular-nums tracking-tight">
                   {activeTripsCount} Perjalanan
                 </div>
               </div>
-              <div className="p-3 rounded-lg bg-canvas">
-                <div className="text-xs text-sage">Status Garansi</div>
-                <div className="text-xs font-semibold text-emerald-700 mt-1 flex items-center gap-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> 100% Proteksi
+              <div className="p-4 rounded-2xl bg-canvas border border-warm-border/60">
+                <div className="text-xs font-semibold text-sage">Status Perlindungan</div>
+                <div className="text-xs font-bold text-emerald-700 mt-2 flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" /> 100% Proteksi Dana
                 </div>
               </div>
             </div>
           </Card>
 
           {/* Compact View Switcher */}
-          <div className="flex border-b border-warm-border">
+          <div className="flex border-b border-warm-border gap-2">
             <button
+              type="button"
               onClick={() => setActiveTab("buyer")}
-              className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm border-b-2 transition-all ${
+              className={`flex min-h-[48px] items-center gap-2.5 px-6 py-3.5 font-bold text-sm border-b-2 transition-all cursor-pointer active:scale-95 ${
                 activeTab === "buyer"
-                  ? "border-olive text-olive bg-white rounded-t-lg"
-                  : "border-transparent text-sage hover:text-charcoal"
+                  ? "border-olive text-olive bg-white rounded-t-2xl shadow-2xs"
+                  : "border-transparent text-sage hover:text-charcoal hover:bg-sand/60 rounded-t-2xl"
               }`}
             >
-              <Package className="h-4 w-4" />
+              <Package className="h-4.5 w-4.5" />
               Titipan Saya (Sebagai Buyer)
-              <Badge className="bg-olive/10 text-olive ml-1 text-xs">
+              <span className="rounded-full bg-olive/10 text-olive px-2 py-0.5 text-xs font-bold">
                 {buyerOrders.length}
-              </Badge>
+              </span>
             </button>
             <button
+              type="button"
               onClick={() => setActiveTab("traveler")}
-              className={`flex items-center gap-2 px-5 py-3 font-semibold text-sm border-b-2 transition-all ${
+              className={`flex min-h-[48px] items-center gap-2.5 px-6 py-3.5 font-bold text-sm border-b-2 transition-all cursor-pointer active:scale-95 ${
                 activeTab === "traveler"
-                  ? "border-olive text-olive bg-white rounded-t-lg"
-                  : "border-transparent text-sage hover:text-charcoal"
+                  ? "border-olive text-olive bg-white rounded-t-2xl shadow-2xs"
+                  : "border-transparent text-sage hover:text-charcoal hover:bg-sand/60 rounded-t-2xl"
               }`}
             >
-              <Plane className="h-4 w-4" />
+              <Plane className="h-4.5 w-4.5" />
               Trip &amp; Bagasi Saya (Sebagai Traveler)
-              <Badge className="bg-gold/20 text-gold-muted ml-1 text-xs">
+              <span className="rounded-full bg-gold/20 text-gold-muted px-2 py-0.5 text-xs font-bold">
                 {travelerTrips.length}
-              </Badge>
+              </span>
             </button>
           </div>
 

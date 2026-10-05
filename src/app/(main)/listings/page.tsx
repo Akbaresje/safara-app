@@ -117,13 +117,13 @@ export default function ListingsPage() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-charcoal">Jelajahi Titipan</h1>
-                <p className="text-sm text-sage mt-1">
-                  {filteredListings.length} listing tersedia dari Tanah Suci & Turki
+                <h1 className="text-3xl font-extrabold tracking-tight text-charcoal">Jelajahi Titipan</h1>
+                <p className="text-sm text-sage mt-1 font-medium">
+                  {filteredListings.length} listing tersedia dari Tanah Suci &amp; Turki
                 </p>
               </div>
               <Link href="/listings/new">
-                <Button className="bg-olive hover:bg-olive-light text-white">
+                <Button className="bg-olive hover:bg-olive-light text-white font-bold h-11 px-5 rounded-xl shadow-xs active:scale-[0.98]">
                   + Posting Titipan
                 </Button>
               </Link>
@@ -132,43 +132,46 @@ export default function ListingsPage() {
             {/* Search & Filters */}
             <div className="space-y-4">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-sage" />
+                <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sage" />
                 <Input
                   placeholder="Cari parfum, kurma, sajadah, Turkish delight..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 border-warm-border"
+                  className="pl-11 h-12 rounded-xl border-warm-border text-sm shadow-2xs focus-visible:ring-olive/30"
                 />
               </div>
 
               {/* Type Filter */}
               <div className="flex gap-2 flex-wrap">
                 <button
+                  type="button"
                   onClick={() => setListingType("all")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer active:scale-95 ${
                     listingType === "all"
-                      ? "bg-olive text-white"
-                      : "bg-white border border-warm-border text-sage hover:border-olive"
+                      ? "bg-olive text-white shadow-xs"
+                      : "bg-white border border-warm-border text-sage hover:border-olive hover:text-charcoal shadow-2xs"
                   }`}
                 >
-                  Semua
+                  Semua Titipan
                 </button>
                 <button
+                  type="button"
                   onClick={() => setListingType("traveler_offer")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer active:scale-95 ${
                     listingType === "traveler_offer"
-                      ? "bg-olive text-white"
-                      : "bg-white border border-warm-border text-sage hover:border-olive"
+                      ? "bg-olive text-white shadow-xs"
+                      : "bg-white border border-warm-border text-sage hover:border-olive hover:text-charcoal shadow-2xs"
                   }`}
                 >
                   Penawaran Traveler
                 </button>
                 <button
+                  type="button"
                   onClick={() => setListingType("buyer_request")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer active:scale-95 ${
                     listingType === "buyer_request"
-                      ? "bg-olive text-white"
-                      : "bg-white border border-warm-border text-sage hover:border-olive"
+                      ? "bg-olive text-white shadow-xs"
+                      : "bg-white border border-warm-border text-sage hover:border-olive hover:text-charcoal shadow-2xs"
                   }`}
                 >
                   Permintaan Pembeli
@@ -184,24 +187,25 @@ export default function ListingsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Sidebar Filters */}
               <aside className="lg:col-span-1">
-                <Card className="border-warm-border bg-white p-4 sticky top-20">
+                <Card className="border-warm-border bg-white p-5 rounded-2xl sticky top-20 shadow-xs">
                   <div className="flex items-center gap-2 mb-4">
-                    <Filter className="h-4 w-4 text-olive" />
-                    <h3 className="font-bold text-charcoal">Filter</h3>
+                    <Filter className="h-4.5 w-4.5 text-olive" />
+                    <h3 className="font-extrabold text-charcoal text-base">Filter Pilihan</h3>
                   </div>
 
                   {/* Destination Filter */}
                   <div className="mb-6">
-                    <Label className="text-xs font-semibold text-sage uppercase tracking-wider mb-2 block">
-                      Destinasi
+                    <Label className="text-xs font-bold text-sage uppercase tracking-wider mb-2.5 block">
+                      Destinasi Negara/Kota
                     </Label>
                     <div className="space-y-1">
                       <button
+                        type="button"
                         onClick={() => setSelectedDestination("all")}
-                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                        className={`w-full text-left min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm transition-all cursor-pointer active:scale-[0.98] ${
                           selectedDestination === "all"
-                            ? "bg-olive/10 text-olive font-semibold"
-                            : "text-sage hover:bg-sand"
+                            ? "bg-olive text-white font-bold shadow-2xs"
+                            : "text-sage hover:bg-sand font-medium hover:text-charcoal"
                         }`}
                       >
                         Semua Destinasi
@@ -209,11 +213,12 @@ export default function ListingsPage() {
                       {Object.entries(DESTINATIONS).map(([key, dest]) => (
                         <button
                           key={key}
+                          type="button"
                           onClick={() => setSelectedDestination(key as TravelDestination)}
-                          className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                          className={`w-full text-left min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm transition-all cursor-pointer active:scale-[0.98] ${
                             selectedDestination === key
-                              ? "bg-olive/10 text-olive font-semibold"
-                              : "text-sage hover:bg-sand"
+                              ? "bg-olive text-white font-bold shadow-2xs"
+                              : "text-sage hover:bg-sand font-medium hover:text-charcoal"
                           }`}
                         >
                           {dest.flag} {dest.label}
@@ -224,16 +229,17 @@ export default function ListingsPage() {
 
                   {/* Category Filter */}
                   <div>
-                    <Label className="text-xs font-semibold text-sage uppercase tracking-wider mb-2 block">
-                      Kategori
+                    <Label className="text-xs font-bold text-sage uppercase tracking-wider mb-2.5 block">
+                      Kategori Barang
                     </Label>
                     <div className="space-y-1">
                       <button
+                        type="button"
                         onClick={() => setSelectedCategory("all")}
-                        className={`w-full text-left px-3 py-2 rounded text-sm transition-colors ${
+                        className={`w-full text-left min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm transition-all cursor-pointer active:scale-[0.98] ${
                           selectedCategory === "all"
-                            ? "bg-olive/10 text-olive font-semibold"
-                            : "text-sage hover:bg-sand"
+                            ? "bg-olive text-white font-bold shadow-2xs"
+                            : "text-sage hover:bg-sand font-medium hover:text-charcoal"
                         }`}
                       >
                         Semua Kategori
@@ -273,101 +279,111 @@ export default function ListingsPage() {
                     {filteredListings.map((listing) => (
                       <Card
                         key={listing.id}
-                        className="border-warm-border bg-white overflow-hidden hover:shadow-lg transition-shadow"
+                        className="border-warm-border bg-white rounded-2xl overflow-hidden shadow-xs hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group flex flex-col justify-between"
                       >
-                        {/* Image */}
-                        <div className="relative h-48">
-                          <Image
-                            src={listing.images[0]}
-                            alt={listing.title}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          />
-                          <Badge
-                            className={`absolute top-3 left-3 ${
-                              listing.type === "traveler_offer"
-                                ? "bg-blue-100 text-blue-800 border-blue-200"
-                                : "bg-amber-100 text-amber-800 border-amber-200"
-                            }`}
-                          >
-                            {listing.type === "traveler_offer" ? "Penawaran" : "Dicari"}
-                          </Badge>
-                          <Badge className="absolute top-3 right-3 bg-white/90 text-charcoal border-warm-border">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {DESTINATIONS[listing.origin].city}
-                          </Badge>
+                        <div>
+                          {/* Image */}
+                          <div className="relative h-52 overflow-hidden bg-sand/30">
+                            <Image
+                              src={listing.images[0]}
+                              alt={listing.title}
+                              fill
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                            />
+                            <div className="absolute top-3 left-3">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold shadow-2xs border ${
+                                  listing.type === "traveler_offer"
+                                    ? "bg-blue-50/95 text-blue-800 border-blue-200"
+                                    : "bg-amber-50/95 text-amber-800 border-amber-200"
+                                }`}
+                              >
+                                {listing.type === "traveler_offer" ? "Penawaran Traveler" : "Permintaan Titip"}
+                              </span>
+                            </div>
+                            <div className="absolute top-3 right-3">
+                              <span className="inline-flex items-center gap-1 rounded-full backdrop-blur-md bg-white/95 px-2.5 py-1 text-xs font-bold text-charcoal border border-warm-border/80 shadow-2xs">
+                                <MapPin className="h-3 w-3 text-olive" />
+                                {DESTINATIONS[listing.origin].city}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="p-5">
+                            {/* Title */}
+                            <h3 className="font-bold text-charcoal text-base line-clamp-2 mb-3.5 group-hover:text-olive transition-colors leading-snug">
+                              {listing.title}
+                            </h3>
+
+                            {/* Creator Info */}
+                            <div className="flex items-center gap-2.5 mb-4 pb-3.5 border-b border-warm-border/80">
+                              <Image
+                                src={listing.creator_avatar}
+                                alt={listing.creator_name}
+                                width={36}
+                                height={36}
+                                className="h-9 w-9 rounded-full object-cover border border-warm-border shrink-0 shadow-2xs"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs font-bold text-charcoal truncate">
+                                    {listing.creator_name}
+                                  </span>
+                                  {listing.creator_verified && (
+                                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-sage mt-0.5">
+                                  <div className="flex items-center text-amber-400">
+                                    <Star className="h-3 w-3 fill-amber-400" />
+                                    <span className="font-bold text-charcoal ml-0.5">{listing.rating}</span>
+                                  </div>
+                                  <span>•</span>
+                                  <span>{listing.completed_trips} trip sukses</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Details */}
+                            <div className="space-y-2 mb-4 bg-sand/30 p-3 rounded-xl border border-warm-border/60">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-sage">Harga Toko:</span>
+                                <span className="font-semibold text-charcoal tabular-nums">
+                                  {formatRupiah(listing.estimated_price)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-sage">Fee Jastip:</span>
+                                <span className="font-semibold text-charcoal tabular-nums">
+                                  {formatRupiah(listing.jastip_fee)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center pt-2 border-t border-warm-border/80">
+                                <span className="text-xs font-bold text-charcoal">Total Estimasi:</span>
+                                <span className="text-base font-extrabold text-olive tabular-nums tracking-tight">
+                                  {formatRupiah(listing.total_price)}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Metadata info */}
+                            <div className="flex items-center justify-between text-xs text-sage font-medium mb-4">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-3.5 w-3.5 text-olive" />
+                                <span>{new Date(listing.departure_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Package className="h-3.5 w-3.5 text-olive" />
+                                <span>{listing.weight_kg}kg • {listing.available_qty} item</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="p-4">
-                          {/* Title */}
-                          <h3 className="font-bold text-charcoal text-sm line-clamp-2 mb-3">
-                            {listing.title}
-                          </h3>
-
-                          {/* Creator Info */}
-                          <div className="flex items-center gap-2 mb-3 pb-3 border-b border-warm-border">
-                            <Image
-                              src={listing.creator_avatar}
-                              alt={listing.creator_name}
-                              width={32}
-                              height={32}
-                              className="h-8 w-8 rounded-full object-cover"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs font-semibold text-charcoal truncate">
-                                  {listing.creator_name}
-                                </span>
-                                {listing.creator_verified && (
-                                  <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
-                                )}
-                              </div>
-                              <div className="flex items-center gap-1 text-[10px] text-sage">
-                                <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" />
-                                <span>{listing.rating}</span>
-                                <span>•</span>
-                                <span>{listing.completed_trips} trip</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Details */}
-                          <div className="space-y-2 mb-4">
-                            <div className="flex justify-between text-xs">
-                              <span className="text-sage">Harga Barang</span>
-                              <span className="font-semibold text-charcoal">
-                                {formatRupiah(listing.estimated_price)}
-                              </span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                              <span className="text-sage">Fee Jastip</span>
-                              <span className="font-semibold text-charcoal">
-                                {formatRupiah(listing.jastip_fee)}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center pt-2 border-t border-warm-border">
-                              <span className="text-xs font-bold text-charcoal">Total Estimasi</span>
-                              <span className="text-base font-extrabold text-olive">
-                                {formatRupiah(listing.total_price)}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Footer */}
-                          <div className="flex items-center justify-between text-xs text-sage mb-3">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              <span>{new Date(listing.departure_date).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Package className="h-3 w-3" />
-                              <span>{listing.weight_kg}kg • {listing.available_qty} item</span>
-                            </div>
-                          </div>
-
+                        <div className="px-5 pb-5">
                           <Link href={`/listings/${listing.id}`}>
-                            <Button className="w-full bg-olive hover:bg-olive-light text-white text-sm">
+                            <Button className="w-full h-11 rounded-xl bg-olive hover:bg-olive-light text-white font-bold text-sm shadow-xs active:scale-[0.98]">
                               {listing.type === "traveler_offer" ? "Pesan Sekarang" : "Tawarkan Bawakan"}
                             </Button>
                           </Link>

@@ -176,21 +176,21 @@ export default function LoginPage() {
         Kembali ke Beranda
       </Link>
 
-      <Card className="w-full max-w-md border-warm-border bg-white p-8 shadow-xl">
+      <Card className="w-full max-w-md border-warm-border bg-white p-8 sm:p-10 rounded-3xl shadow-xl">
         <div className="text-center mb-6">
           <Link href="/" className="inline-flex items-center gap-2 mb-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-olive text-white font-bold text-xl">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-olive text-white font-bold text-xl shadow-xs">
               S
             </div>
           </Link>
-          <h1 className="text-2xl font-bold text-charcoal">Masuk ke Safara</h1>
-          <p className="text-xs text-sage mt-1">
+          <h1 className="text-2xl font-extrabold text-charcoal">Masuk ke Safara</h1>
+          <p className="text-xs sm:text-sm text-sage mt-1 font-medium">
             Jastip aman dengan proteksi rekening bersama (escrow)
           </p>
         </div>
 
         {error && (
-          <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 text-xs">
+          <Alert className="mb-4 border-red-200 bg-red-50 text-red-800 text-xs font-medium rounded-xl">
             {error}
           </Alert>
         )}
@@ -200,9 +200,9 @@ export default function LoginPage() {
           onClick={handleGoogleLogin}
           variant="outline"
           disabled={loading}
-          className="w-full border-warm-border hover:bg-canvas text-charcoal font-semibold text-xs py-5"
+          className="w-full h-12 rounded-xl border border-warm-border hover:bg-sand/60 text-charcoal font-bold text-xs sm:text-sm active:scale-[0.98] shadow-2xs"
         >
-          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+          <svg className="mr-2.5 h-4.5 w-4.5" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -223,23 +223,23 @@ export default function LoginPage() {
           Lanjut dengan Google
         </Button>
 
-        <div className="relative my-5">
+        <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-warm-border" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-2 text-sage">atau masuk dengan akun</span>
+            <span className="bg-white px-3 font-semibold text-sage">atau masuk dengan akun</span>
           </div>
         </div>
 
         {/* Method Tab Selector */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="grid grid-cols-2 gap-2 mb-5">
           <button
             type="button"
             onClick={() => setMethod("email")}
-            className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-xs font-semibold transition-all ${
+            className={`flex min-h-[44px] items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition-all cursor-pointer active:scale-95 ${
               method === "email"
-                ? "border-olive bg-olive/5 text-olive ring-2 ring-olive/20"
+                ? "border-olive bg-olive/5 text-olive ring-2 ring-olive/20 shadow-2xs"
                 : "border-warm-border bg-canvas text-sage hover:text-charcoal"
             }`}
           >
@@ -249,9 +249,9 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => setMethod("phone")}
-            className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-xs font-semibold transition-all ${
+            className={`flex min-h-[44px] items-center justify-center gap-2 rounded-xl border p-2.5 text-xs font-bold transition-all cursor-pointer active:scale-95 ${
               method === "phone"
-                ? "border-olive bg-olive/5 text-olive ring-2 ring-olive/20"
+                ? "border-olive bg-olive/5 text-olive ring-2 ring-olive/20 shadow-2xs"
                 : "border-warm-border bg-canvas text-sage hover:text-charcoal"
             }`}
           >
@@ -262,9 +262,9 @@ export default function LoginPage() {
 
         {/* Form Body */}
         {method === "email" ? (
-          <form onSubmit={handleEmailLogin} className="space-y-3.5">
+          <form onSubmit={handleEmailLogin} className="space-y-4">
             <div>
-              <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
+              <Label className="text-xs font-bold text-sage uppercase tracking-wider">
                 Alamat Email
               </Label>
               <Input
@@ -272,17 +272,17 @@ export default function LoginPage() {
                 placeholder="nama@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-1"
+                className="mt-1.5"
                 disabled={loading}
                 required
               />
             </div>
 
             <div>
-              <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
+              <Label className="text-xs font-bold text-sage uppercase tracking-wider">
                 Kata Sandi (Password)
               </Label>
-              <div className="relative mt-1">
+              <div className="relative mt-1.5">
                 <Input
                   type="password"
                   placeholder="Masukkan kata sandi"
@@ -292,14 +292,14 @@ export default function LoginPage() {
                   disabled={loading}
                   required
                 />
-                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-sage" />
+                <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-sage" />
               </div>
             </div>
 
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-olive hover:bg-olive-light text-white font-semibold mt-2 py-5 text-sm"
+              className="w-full h-12 rounded-xl bg-olive hover:bg-olive-light text-white font-bold mt-2 text-sm shadow-xs active:scale-[0.98]"
             >
               {loading ? (
                 <>

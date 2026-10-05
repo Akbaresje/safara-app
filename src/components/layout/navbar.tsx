@@ -207,12 +207,12 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-1">
+        <div className="hidden md:flex items-center gap-1.5">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-sage transition-colors hover:bg-sand hover:text-charcoal"
+              className="flex items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold text-sage transition-all duration-150 hover:bg-sand hover:text-charcoal focus-visible:ring-2 focus-visible:ring-olive/30 focus-visible:outline-none active:scale-95"
             >
               <link.icon className="h-4 w-4" />
               {link.label}
@@ -228,35 +228,35 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center gap-2.5 rounded-full border border-warm-border bg-white px-3 py-1.5 shadow-xs transition-all hover:border-olive hover:shadow-sm"
+                className="flex items-center gap-2.5 rounded-full border border-warm-border bg-white px-3.5 py-1.5 shadow-2xs transition-all duration-150 hover:border-olive/60 hover:shadow-xs focus-visible:ring-2 focus-visible:ring-olive/30 focus-visible:outline-none active:scale-95 cursor-pointer"
               >
                 {profile?.avatar_url ? (
                   <Image
                     src={profile.avatar_url}
                     alt={displayName}
-                    width={28}
-                    height={28}
-                    className="h-7 w-7 rounded-full object-cover"
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-full object-cover border border-warm-border"
                   />
                 ) : (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-olive text-xs font-bold text-white">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-olive text-xs font-bold text-white shadow-2xs">
                     {initial}
                   </div>
                 )}
-                <span className="max-w-[130px] truncate text-xs font-semibold text-charcoal">
+                <span className="max-w-[140px] truncate text-xs font-bold text-charcoal">
                   {displayName}
                 </span>
-                <ChevronDown className="h-3.5 w-3.5 text-sage" />
+                <ChevronDown className="h-3.5 w-3.5 text-sage transition-transform duration-200" />
               </button>
 
               {/* Dropdown Menu Popup */}
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-60 rounded-xl border border-warm-border bg-white p-1.5 shadow-xl animate-in fade-in-0 zoom-in-95">
+                <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-warm-border bg-white p-2 shadow-xl animate-in fade-in-0 zoom-in-95">
                   <div className="border-b border-warm-border px-3 py-2.5">
                     <p className="text-xs font-bold text-charcoal truncate">
                       {displayName}
                     </p>
-                    <p className="text-[11px] text-sage truncate">
+                    <p className="text-xs text-sage truncate mt-0.5">
                       {user?.email || user?.phone || "adminsafara@gmail.com"}
                     </p>
                   </div>
@@ -316,16 +316,14 @@ export function Navbar() {
               <Link href="/login" className="hidden md:block">
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="text-sage hover:text-charcoal"
+                  className="text-sage hover:text-charcoal font-semibold text-sm h-10 px-4"
                 >
                   Masuk
                 </Button>
               </Link>
               <Link href="/register" className="hidden md:block">
                 <Button
-                  size="sm"
-                  className="bg-olive text-white hover:bg-olive-light"
+                  className="bg-olive text-white hover:bg-olive-light font-semibold text-sm h-10 px-5 shadow-xs hover:shadow-sm"
                 >
                   Daftar
                 </Button>
@@ -336,33 +334,39 @@ export function Navbar() {
           {/* Mobile Hamburger Menu */}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger
-              render={<Button variant="ghost" size="icon" className="md:hidden" />}
-            >
-              <Menu className="h-5 w-5" />
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72 bg-canvas">
-              <div className="flex flex-col gap-1 pt-6">
+              render={
+                <button
+                  type="button"
+                  aria-label="Buka menu navigasi"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-warm-border bg-white text-charcoal shadow-2xs hover:bg-sand hover:border-olive/40 active:scale-95 transition-all md:hidden cursor-pointer"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              }
+            />
+            <SheetContent side="right" className="w-80 bg-canvas p-6">
+              <div className="flex flex-col gap-1.5 pt-4">
                 {(user || hasAdminSession) && (
-                  <div className="mb-4 rounded-xl border border-warm-border bg-white p-3.5">
+                  <div className="mb-4 rounded-2xl border border-warm-border bg-white p-4 shadow-xs">
                     <div className="flex items-center gap-3">
                       {profile?.avatar_url ? (
                         <Image
                           src={profile.avatar_url}
                           alt={displayName}
-                          width={40}
-                          height={40}
-                          className="h-10 w-10 rounded-full object-cover"
+                          width={44}
+                          height={44}
+                          className="h-11 w-11 rounded-full object-cover border border-warm-border"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-olive text-sm font-bold text-white">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-olive text-base font-bold text-white shadow-2xs">
                           {initial}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="truncate text-xs font-bold text-charcoal">
+                        <p className="truncate text-sm font-bold text-charcoal">
                           {displayName}
                         </p>
-                        <p className="truncate text-[11px] text-sage">
+                        <p className="truncate text-xs text-sage mt-0.5">
                           {user?.email || user?.phone || "adminsafara@gmail.com"}
                         </p>
                       </div>
@@ -375,9 +379,9 @@ export function Navbar() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-sage transition-colors hover:bg-sand hover:text-charcoal"
+                    className="flex min-h-[44px] items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-sage transition-all duration-150 hover:bg-sand hover:text-charcoal active:scale-95"
                   >
-                    <link.icon className="h-4 w-4" />
+                    <link.icon className="h-4.5 w-4.5" />
                     {link.label}
                   </Link>
                 ))}
@@ -389,35 +393,35 @@ export function Navbar() {
                     <Link
                       href="/profile"
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-sage hover:bg-sand hover:text-charcoal"
+                      className="flex min-h-[44px] items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-sage hover:bg-sand hover:text-charcoal active:scale-95"
                     >
-                      <Settings className="h-4 w-4" />
+                      <Settings className="h-4.5 w-4.5" />
                       Atur Profil Akun
                     </Link>
                     <Link
                       href="/dashboard"
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-sage hover:bg-sand hover:text-charcoal"
+                      className="flex min-h-[44px] items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-sage hover:bg-sand hover:text-charcoal active:scale-95"
                     >
-                      <LayoutDashboard className="h-4 w-4" />
+                      <LayoutDashboard className="h-4.5 w-4.5" />
                       Dashboard
                     </Link>
                     {isAdmin && (
                       <Link
                         href="/admin"
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-olive hover:bg-sand"
+                        className="flex min-h-[44px] items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-olive hover:bg-sand active:scale-95"
                       >
-                        <Shield className="h-4 w-4" />
+                        <Shield className="h-4.5 w-4.5" />
                         Admin Dashboard
                       </Link>
                     )}
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 text-left"
+                      className="flex min-h-[44px] items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 text-left active:scale-95 cursor-pointer"
                     >
-                      <LogOut className="h-4 w-4" />
+                      <LogOut className="h-4.5 w-4.5" />
                       Keluar
                     </button>
                   </>
@@ -426,17 +430,17 @@ export function Navbar() {
                     <Link
                       href="/login"
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-sage hover:bg-sand hover:text-charcoal"
+                      className="flex min-h-[44px] items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-sage hover:bg-sand hover:text-charcoal active:scale-95"
                     >
-                      <UserIcon className="h-4 w-4" />
+                      <UserIcon className="h-4.5 w-4.5" />
                       Masuk
                     </Link>
                     <Link
                       href="/register"
                       onClick={() => setOpen(false)}
-                      className="mt-2"
+                      className="mt-3"
                     >
-                      <Button className="w-full bg-olive hover:bg-olive-light text-white">
+                      <Button className="w-full bg-olive hover:bg-olive-light text-white h-11 text-sm font-semibold shadow-xs">
                         Daftar Akun Baru
                       </Button>
                     </Link>

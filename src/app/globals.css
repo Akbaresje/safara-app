@@ -14,7 +14,7 @@
   /* Safara Custom Colors */
   --color-olive: #26382B;
   --color-olive-light: #2D3E33;
-  --color-sage: #6B7A6F;
+  --color-sage: #526356;
   --color-gold: #D4AF37;
   --color-gold-muted: #C5A059;
   --color-sand: #F7F5F0;
@@ -72,7 +72,7 @@
   --secondary: #F7F5F0;
   --secondary-foreground: #26382B;
   --muted: #F7F5F0;
-  --muted-foreground: #6B7A6F;
+  --muted-foreground: #526356;
   --accent: #D4AF37;
   --accent-foreground: #1A201C;
   --destructive: #DC2626;
@@ -81,10 +81,10 @@
   --ring: #26382B;
   --chart-1: #26382B;
   --chart-2: #D4AF37;
-  --chart-3: #6B7A6F;
+  --chart-3: #526356;
   --chart-4: #C5A059;
   --chart-5: #2D3E33;
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: #FAF8F5;
   --sidebar-foreground: #1A201C;
   --sidebar-primary: #26382B;
@@ -107,7 +107,7 @@
   --secondary: #26382B;
   --secondary-foreground: #F7F5F0;
   --muted: #26382B;
-  --muted-foreground: #9CA89F;
+  --muted-foreground: #A1B0A4;
   --accent: #C5A059;
   --accent-foreground: #1A201C;
   --destructive: #EF4444;
@@ -115,7 +115,7 @@
   --input: rgba(255, 255, 255, 0.15);
   --ring: #D4AF37;
   --chart-1: #D4AF37;
-  --chart-2: #6B7A6F;
+  --chart-2: #526356;
   --chart-3: #C5A059;
   --chart-4: #26382B;
   --chart-5: #2D3E33;
@@ -132,11 +132,12 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground selection:bg-olive/15 selection:text-olive;
   }
   html {
-    @apply font-sans;
+    @apply font-sans scroll-smooth;
   }
 }

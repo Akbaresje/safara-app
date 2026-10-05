@@ -20,33 +20,33 @@ const FOOTER_LINKS = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-warm-border bg-sand">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+    <footer className="border-t border-warm-border bg-sand/70">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12">
           {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-olive text-white font-bold text-lg">
+          <div className="col-span-2 md:col-span-1 space-y-3">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-olive text-white font-bold text-lg shadow-2xs">
                 S
               </div>
-              <span className="text-lg font-bold text-charcoal">Safara</span>
-            </div>
-            <p className="mt-3 text-sm text-sage leading-relaxed">
-              Platform jastip terpercaya untuk oleh-oleh dari Tanah Suci & Turki.
+              <span className="text-xl font-bold tracking-tight text-charcoal">Safara</span>
+            </Link>
+            <p className="text-sm text-sage leading-relaxed">
+              Platform jastip terpercaya untuk oleh-oleh dari Tanah Suci &amp; Turki.
               Escrow aman, traveler terverifikasi.
             </p>
           </div>
 
           {/* Link Groups */}
           {Object.entries(FOOTER_LINKS).map(([group, links]) => (
-            <div key={group}>
-              <h3 className="text-sm font-semibold text-charcoal">{group}</h3>
-              <ul className="mt-3 space-y-2">
+            <div key={group} className="space-y-3">
+              <h3 className="text-sm font-bold text-charcoal uppercase tracking-wider">{group}</h3>
+              <ul className="space-y-2">
                 {links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-sage transition-colors hover:text-charcoal"
+                      className="inline-block py-1 text-sm font-medium text-sage transition-colors duration-150 hover:text-olive"
                     >
                       {link.label}
                     </Link>
@@ -57,8 +57,8 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-10 border-t border-warm-border pt-6 text-center text-xs text-sage">
-          &copy; {new Date().getFullYear()} Safara. Hak cipta dilindungi.
+        <div className="mt-12 border-t border-warm-border pt-8 text-center text-xs font-medium text-sage">
+          &copy; {new Date().getFullYear()} Safara. Seluruh hak cipta dilindungi. Transaksi aman dengan Rekening Bersama.
         </div>
       </div>
     </footer>
