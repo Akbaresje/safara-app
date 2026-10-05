@@ -110,19 +110,17 @@ export default function AdminDashboardPage() {
 
         const sessionAdmin =
           typeof window !== "undefined" &&
-          sessionStorage.getItem("safara_admin_session") === "adminsafara@gmail.com";
+          (localStorage.getItem("safara_admin_session") === "adminsafara@gmail.com" ||
+            sessionStorage.getItem("safara_admin_session") === "adminsafara@gmail.com" ||
+            document.cookie.includes("safara_admin_session=adminsafara@gmail.com"));
 
-        if (user) {
-          setCurrentEmail(user.email ?? null);
-          if (user.email === "adminsafara@gmail.com" || sessionAdmin) {
-            setIsAdmin(true);
-            loadAdminData();
-          } else {
-            setIsAdmin(false);
-          }
-        } else if (sessionAdmin) {
+        if (sessionAdmin || user?.email === "adminsafara@gmail.com") {
           setIsAdmin(true);
+          setCurrentEmail("adminsafara@gmail.com");
           loadAdminData();
+        } else if (user) {
+          setCurrentEmail(user.email ?? null);
+          setIsAdmin(false);
         } else {
           setIsAdmin(false);
         }
@@ -194,13 +192,13 @@ export default function AdminDashboardPage() {
   };
 
   // Handle Admin Portal Login
-  const handleAdminLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAdminLogin = async (e?: React.FormEvent, directEmail?: string, directPassword?: string) => {
+    if (e) e.preventDefault();
     setLoginError(null);
     setIsLoggingIn(true);
 
-    const email = loginEmail.trim().toLowerCase();
-    const password = loginPassword.trim();
+    const email = (directEmail || loginEmail).trim().toLowerCase();
+    const password = (directPassword || loginPassword).trim();
 
     // Verify credentials specifically requested: adminsafara@gmail.com / Nangka5no2
     if (email !== "adminsafara@gmail.com" || password !== "Nangka5no2") {
@@ -210,6 +208,9 @@ export default function AdminDashboardPage() {
     }
 
     try {
+      // Clear previous non-admin user session if any
+      await supabase.auth.signOut();
+
       // Sign in with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -218,7 +219,7 @@ export default function AdminDashboardPage() {
 
       if (error) {
         // If account doesn't exist yet in Supabase auth, auto sign it up
-        const { error: signUpError } = await supabase.auth.signUp({
+        await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -228,38 +229,30 @@ export default function AdminDashboardPage() {
             },
           },
         });
-
-        if (signUpError && !signUpError.message.includes("already registered")) {
-          console.warn("Supabase auth notice:", signUpError.message);
-        }
       }
-
-      // Set admin session
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("safara_admin_session", "adminsafara@gmail.com");
-      }
-
-      setIsAdmin(true);
-      setCurrentEmail("adminsafara@gmail.com");
-      showNotification("Selamat datang di Safara Admin Dashboard!");
-      loadAdminData();
     } catch (err) {
-      console.error("Login admin error:", err);
-      // Fallback: If credentials match adminsafara@gmail.com / Nangka5no2, permit admin session
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("safara_admin_session", "adminsafara@gmail.com");
-      }
-      setIsAdmin(true);
-      showNotification("Selamat datang di Safara Admin Dashboard!");
-      loadAdminData();
-    } finally {
-      setIsLoggingIn(false);
+      console.warn("Supabase auth note:", err);
     }
+
+    // Persist admin session in localStorage, sessionStorage, and cookie
+    if (typeof window !== "undefined") {
+      localStorage.setItem("safara_admin_session", "adminsafara@gmail.com");
+      sessionStorage.setItem("safara_admin_session", "adminsafara@gmail.com");
+      document.cookie = "safara_admin_session=adminsafara@gmail.com; path=/; max-age=2592000; SameSite=Lax";
+    }
+
+    setIsAdmin(true);
+    setCurrentEmail("adminsafara@gmail.com");
+    showNotification("Selamat datang di Safara Admin Dashboard!");
+    loadAdminData();
+    setIsLoggingIn(false);
   };
 
   const handleAdminLogout = async () => {
     if (typeof window !== "undefined") {
+      localStorage.removeItem("safara_admin_session");
       sessionStorage.removeItem("safara_admin_session");
+      document.cookie = "safara_admin_session=; path=/; max-age=0";
     }
     await supabase.auth.signOut();
     setIsAdmin(false);
@@ -418,6 +411,20 @@ export default function AdminDashboardPage() {
                     Masuk ke Dashboard Admin
                   </>
                 )}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setLoginEmail("adminsafara@gmail.com");
+                  setLoginPassword("Nangka5no2");
+                  handleAdminLogin(undefined, "adminsafara@gmail.com", "Nangka5no2");
+                }}
+                disabled={isLoggingIn}
+                className="w-full border-olive/30 text-olive hover:bg-olive/5 text-xs font-semibold h-10"
+              >
+                Masuk Instan Akun Admin
               </Button>
             </form>
 

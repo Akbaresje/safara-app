@@ -186,13 +186,13 @@ function ChatContent() {
   const activeConversation =
     conversations.find((c) => c.id === selectedId) || conversations[0];
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (behavior: ScrollBehavior = "instant") => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [activeConversation?.messages]);
+    scrollToBottom("instant");
+  }, [selectedId]);
 
   const handleSendMessage = (textToSend?: string) => {
     const text = (textToSend !== undefined ? textToSend : messageInput).trim();
@@ -224,6 +224,7 @@ function ChatContent() {
 
     setMessageInput("");
     setAttachedImage(null);
+    setTimeout(() => scrollToBottom("smooth"), 50);
 
     // If talking to official support, simulate intelligent assistant response
     if (activeConversation.id === "support-official") {
@@ -275,6 +276,7 @@ function ChatContent() {
             return c;
           })
         );
+        setTimeout(() => scrollToBottom("smooth"), 50);
       }, 700);
     }
   };
@@ -383,7 +385,7 @@ function ChatContent() {
             </div>
 
             {/* Conversations Scroll Area - Independent Scroll Container */}
-            <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-warm-border overscroll-contain">
+            <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-warm-border touch-pan-y">
               {filteredConversations.length === 0 ? (
                 <div className="p-8 text-center text-xs text-sage">
                   Tidak ditemukan obrolan yang sesuai
@@ -547,7 +549,7 @@ function ChatContent() {
             </div>
 
             {/* Messages Area - Independent Scroll Container */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5 overscroll-contain">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5 touch-pan-y">
               {activeConversation.messages.map((msg) => (
                 <div
                   key={msg.id}

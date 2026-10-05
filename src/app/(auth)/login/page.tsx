@@ -56,10 +56,47 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    // Check if this is the dedicated admin account
+    if (cleanEmail === "adminsafara@gmail.com" && cleanPassword === "Nangka5no2") {
+      try {
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password: cleanPassword,
+        });
+
+        if (signInErr) {
+          await supabase.auth.signUp({
+            email: cleanEmail,
+            password: cleanPassword,
+            options: {
+              data: {
+                full_name: "Admin Safara",
+                system_role: "admin",
+              },
+            },
+          });
+        }
+      } catch (err) {
+        console.warn("Admin signin note:", err);
+      }
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("safara_admin_session", "adminsafara@gmail.com");
+        sessionStorage.setItem("safara_admin_session", "adminsafara@gmail.com");
+        document.cookie = "safara_admin_session=adminsafara@gmail.com; path=/; max-age=2592000; SameSite=Lax";
+      }
+
+      router.push("/admin");
+      return;
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: cleanEmail,
+        password: cleanPassword,
       });
 
       if (error) throw error;

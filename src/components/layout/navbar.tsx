@@ -179,12 +179,18 @@ export function Navbar() {
     router.push("/login");
   };
 
-  const isAdmin =
-    user?.email === "adminsafara@gmail.com" ||
-    (typeof window !== "undefined" &&
-      sessionStorage.getItem("safara_admin_session") === "adminsafara@gmail.com");
+  const hasAdminSession =
+    typeof window !== "undefined" &&
+    (localStorage.getItem("safara_admin_session") === "adminsafara@gmail.com" ||
+      sessionStorage.getItem("safara_admin_session") === "adminsafara@gmail.com" ||
+      document.cookie.includes("safara_admin_session=adminsafara@gmail.com"));
 
-  const displayName = profile?.full_name || user?.email?.split("@")[0] || "Akun Saya";
+  const isAdmin = user?.email === "adminsafara@gmail.com" || hasAdminSession;
+
+  const displayName =
+    hasAdminSession && !user
+      ? "Admin Safara"
+      : profile?.full_name || user?.email?.split("@")[0] || "Akun Saya";
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
@@ -216,7 +222,7 @@ export function Navbar() {
 
         {/* Auth State & Mobile Menu */}
         <div className="flex items-center gap-3">
-          {user ? (
+          {user || hasAdminSession ? (
             /* Logged In User Dropdown */
             <div className="relative hidden md:block" ref={dropdownRef}>
               <button
@@ -251,7 +257,7 @@ export function Navbar() {
                       {displayName}
                     </p>
                     <p className="text-[11px] text-sage truncate">
-                      {user.email || user.phone}
+                      {user?.email || user?.phone || "adminsafara@gmail.com"}
                     </p>
                   </div>
 
@@ -336,7 +342,7 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent side="right" className="w-72 bg-canvas">
               <div className="flex flex-col gap-1 pt-6">
-                {user && (
+                {(user || hasAdminSession) && (
                   <div className="mb-4 rounded-xl border border-warm-border bg-white p-3.5">
                     <div className="flex items-center gap-3">
                       {profile?.avatar_url ? (
@@ -357,7 +363,7 @@ export function Navbar() {
                           {displayName}
                         </p>
                         <p className="truncate text-[11px] text-sage">
-                          {user.email || user.phone}
+                          {user?.email || user?.phone || "adminsafara@gmail.com"}
                         </p>
                       </div>
                     </div>
@@ -378,7 +384,7 @@ export function Navbar() {
 
                 <div className="my-3 border-t border-warm-border" />
 
-                {user ? (
+                {user || hasAdminSession ? (
                   <>
                     <Link
                       href="/profile"
