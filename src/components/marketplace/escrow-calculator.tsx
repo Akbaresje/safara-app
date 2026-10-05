@@ -51,26 +51,26 @@ export function EscrowCalculator() {
 
   return (
     <Card className="overflow-hidden border border-warm-border bg-white shadow-xl">
-      <div className="bg-olive p-5 text-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold/20 text-gold">
+      <div className="bg-olive p-4 sm:p-5 text-white">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/20 text-gold">
               <Calculator className="h-4 w-4" />
             </div>
-            <h3 className="font-bold text-base tracking-tight">
-              Kalkulator Estimasi Biaya Titip
+            <h3 className="font-bold text-sm sm:text-base tracking-tight truncate">
+              Kalkulator Estimasi Biaya
             </h3>
           </div>
-          <Badge className="bg-gold/20 text-gold border-gold/30 hover:bg-gold/30">
+          <Badge className="bg-gold/20 text-gold border-gold/30 hover:bg-gold/30 text-[11px] shrink-0 px-2 py-0.5">
             Kurs Realtime
           </Badge>
         </div>
-        <p className="mt-1 text-xs text-sand/80">
+        <p className="mt-1 text-xs text-sand/80 leading-relaxed">
           Hitung estimasi total yang dibayarkan ke Rekening Escrow Safara.
         </p>
       </div>
 
-      <div className="p-6 space-y-5">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
         {/* Currency Switcher */}
         <div>
           <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
@@ -82,10 +82,10 @@ export function EscrowCalculator() {
                 key={cur}
                 type="button"
                 onClick={() => setCurrency(cur)}
-                className={`flex items-center justify-center gap-2 rounded-lg border p-2.5 text-sm font-semibold transition-all ${
+                className={`flex items-center justify-center gap-1.5 rounded-xl border p-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer active:scale-95 ${
                   currency === cur
-                    ? "border-olive bg-olive/5 text-olive ring-2 ring-olive/20"
-                    : "border-warm-border bg-canvas text-sage hover:text-charcoal"
+                    ? "border-olive bg-olive/10 text-olive ring-1 ring-olive/30 shadow-2xs"
+                    : "border-warm-border bg-canvas text-sage hover:text-charcoal hover:bg-sand/60"
                 }`}
               >
                 <span>
@@ -94,19 +94,19 @@ export function EscrowCalculator() {
               </button>
             ))}
           </div>
-          <div className="mt-1.5 text-right text-[11px] text-sage">
+          <div className="mt-1.5 text-right text-[11px] font-medium text-sage">
             1 {currency} = ~{formatRupiah(exchangeRate)}
           </div>
         </div>
 
         {/* Price Input */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
           <div>
             <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
-              Estimasi Harga Barang ({currency})
+              Estimasi Harga ({currency})
             </Label>
             <div className="relative mt-1.5">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-sage">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs sm:text-sm font-bold text-sage">
                 {currency}
               </span>
               <Input
@@ -116,18 +116,18 @@ export function EscrowCalculator() {
                 onChange={(e) =>
                   setLocalPrice(Math.max(0, Number(e.target.value)))
                 }
-                className="pl-14 font-semibold text-charcoal"
+                className="pl-13 sm:pl-14 h-11 text-sm font-semibold text-charcoal border-warm-border shadow-2xs"
                 placeholder="0"
               />
             </div>
-            <p className="mt-1 text-[11px] text-sage">
+            <p className="mt-1 text-[11px] text-sage truncate">
               Setara: <AnimatedNumber value={itemPriceIdr} />
             </p>
           </div>
 
           <div>
             <Label className="text-xs font-semibold text-sage uppercase tracking-wider">
-              Tawaran Jastip Fee (IDR)
+              Tawaran Fee Jastip (IDR)
             </Label>
             <div className="relative mt-1.5">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-sage">
@@ -141,48 +141,48 @@ export function EscrowCalculator() {
                 onChange={(e) =>
                   setJastipFee(Math.max(0, Number(e.target.value)))
                 }
-                className="pl-10 font-semibold text-charcoal"
+                className="pl-9 h-11 text-sm font-semibold text-charcoal border-warm-border shadow-2xs"
                 placeholder="75000"
               />
             </div>
             <p className="mt-1 text-[11px] text-sage">
-              Komisi untuk traveler yang membawa
+              Komisi untuk traveler pembawa
             </p>
           </div>
         </div>
 
         {/* Calculation Summary Table */}
-        <div className="rounded-xl border border-warm-border bg-canvas p-4 space-y-2">
-          <div className="flex justify-between text-xs text-sage">
-            <span>
+        <div className="rounded-xl border border-warm-border bg-canvas p-3.5 sm:p-4 space-y-2.5">
+          <div className="flex justify-between items-center text-xs text-sage">
+            <span className="truncate pr-2">
               Harga Barang ({localPrice} {currency})
             </span>
-            <span className="font-medium text-charcoal">
+            <span className="font-semibold text-charcoal tabular-nums shrink-0">
               <AnimatedNumber value={itemPriceIdr} />
             </span>
           </div>
-          <div className="flex justify-between text-xs text-sage">
-            <span>Komisi Jastip Traveler</span>
-            <span className="font-medium text-charcoal">
+          <div className="flex justify-between items-center text-xs text-sage">
+            <span className="truncate pr-2">Komisi Jastip Traveler</span>
+            <span className="font-semibold text-charcoal tabular-nums shrink-0">
               <AnimatedNumber value={jastipFee} />
             </span>
           </div>
-          <div className="flex justify-between text-xs text-sage">
-            <span className="flex items-center gap-1">
-              Proteksi Escrow &amp; Platform (3.5%)
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 inline" />
+          <div className="flex justify-between items-center text-xs text-sage">
+            <span className="flex items-center gap-1 truncate pr-2">
+              <span>Proteksi Escrow (3.5%)</span>
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 inline shrink-0" />
             </span>
-            <span className="font-medium text-charcoal">
+            <span className="font-semibold text-charcoal tabular-nums shrink-0">
               <AnimatedNumber value={platformFee} />
             </span>
           </div>
-          <div className="border-t border-warm-border pt-2 flex justify-between items-baseline">
+          <div className="border-t border-warm-border/80 pt-2.5 flex justify-between items-center gap-2">
             <div>
-              <div className="text-xs font-semibold text-charcoal">
+              <div className="text-xs font-bold text-charcoal">
                 Total Masuk Escrow
               </div>
-              <div className="text-[10px] text-emerald-700 font-medium">
-                Dana aman 100% sampai barang tiba
+              <div className="text-[10px] text-emerald-700 font-semibold">
+                Dana aman 100% sampai konfirmasi
               </div>
             </div>
             <motion.div
@@ -190,7 +190,7 @@ export function EscrowCalculator() {
               initial={{ scale: 1.05, color: "#D4AF37" }}
               animate={{ scale: 1, color: "#26382B" }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="text-lg font-extrabold"
+              className="text-base sm:text-lg font-extrabold tabular-nums shrink-0"
             >
               <AnimatedNumber value={totalEscrow} />
             </motion.div>
@@ -199,10 +199,11 @@ export function EscrowCalculator() {
 
         <Link
           href={`/listings/new?type=buyer_request&currency=${currency}&price=${localPrice}&fee=${jastipFee}`}
+          className="block"
         >
-          <Button className="w-full bg-olive hover:bg-olive-light text-white font-semibold py-5">
-            <span>Posting Titipan dengan Budget Ini</span>
-            <ArrowRight className="ml-2 h-4 w-4" />
+          <Button className="w-full h-11 sm:h-12 rounded-xl bg-olive hover:bg-olive-light text-white font-bold text-xs sm:text-sm shadow-xs hover:shadow-sm active:scale-[0.98]">
+            <span className="truncate">Posting Titipan dengan Budget Ini</span>
+            <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
           </Button>
         </Link>
       </div>
